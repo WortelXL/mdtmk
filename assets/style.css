@@ -362,3 +362,63 @@ a { color: inherit; }
     font-size: 11.5px;
     margin-top: 28px;
 }
+
+/* ---- Mijn status (fase M2) --------------------------------------- */
+.status-panel {
+    margin-top: 16px;
+}
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+.status-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    width: 100%;
+    padding: 12px 4px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--text);
+    cursor: pointer;
+}
+.status-btn:active { transform: scale(0.97); }
+.status-btn .afk {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+}
+.status-btn .naam {
+    font-size: 10.5px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.2;
+}
+.status-btn.actief {
+    background: rgba(245,165,36,0.14);
+    border-color: var(--amber);
+}
+.status-btn.actief .afk { color: var(--amber); }
+.status-btn.actief .naam { color: var(--amber); }
+
+/* ---- Logboek toevoegen (fase M2) ----------------------------------- */
+.logboek-form textarea {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14.5px;
+    padding: 10px 12px;
+    resize: vertical;
+    margin-bottom: 10px;
+}
+.logboek-form textarea:focus {
+    outline: none;
+    border-color: var(--amber);
+}

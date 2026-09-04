@@ -4,14 +4,34 @@ vereis_login();
 $pdo = get_pdo();
 
 $meldingen = mijn_meldingen($pdo, huidige_gebruiker_id());
+$mijn_status = huidige_eenheidsstatus($pdo, huidige_gebruiker_id());
+$mijn_team = mijn_team($pdo, huidige_gebruiker_id());
 
 $paginatitel = 'Mijn meldingen';
 include __DIR__ . '/includes/header.php';
 ?>
 
+<div class="panel status-panel">
+    <h2>Mijn status<?= $mijn_team ? ' · ' . e($mijn_team['naam']) : '' ?></h2>
+    <div class="status-grid">
+        <?php foreach (alle_eenheidsstatussen($pdo) as $s): ?>
+            <form method="post" action="/status.php">
+                <input type="hidden" name="eenheidsstatus_id" value="<?= $s['id'] ?>">
+                <button type="submit" class="status-btn <?= $mijn_status && $mijn_status['id'] === $s['id'] ? 'actief' : '' ?>">
+                    <span class="afk"><?= e($s['afkorting']) ?></span>
+                    <span class="naam"><?= e($s['naam']) ?></span>
+                </button>
+            </form>
+        <?php endforeach; ?>
+    </div>
+    <?php if (!alle_eenheidsstatussen($pdo)): ?>
+        <p class="log-leeg">Nog geen eenheidsstatussen ingesteld.</p>
+    <?php endif; ?>
+</div>
+
 <div class="page-head">
     <h1>Mijn meldingen</h1>
-    <p>Actieve meldingen die aan jou zijn toegewezen.</p>
+    <p>Actieve meldingen die aan jou zijn toegewezen<?= $mijn_team ? ' (rechtstreeks of via team ' . e($mijn_team['naam']) . ')' : '' ?>.</p>
 </div>
 
 <div class="melding-lijst">

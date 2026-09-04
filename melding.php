@@ -16,6 +16,15 @@ if (!$melding) {
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['actie'] ?? '') === 'logboek_toevoegen') {
+    $tekst = trim($_POST['notitie'] ?? '');
+    if ($tekst !== '') {
+        voeg_logboekregel_toe($pdo, $melding['id'], $tekst, huidige_gebruiker_id(), huidige_gebruiker_naam());
+    }
+    header('Location: /melding.php?id=' . $melding['id']);
+    exit;
+}
+
 $logboek = melding_logboek($pdo, $melding['id']);
 
 $paginatitel = $melding['meld_id'];
@@ -50,6 +59,15 @@ include __DIR__ . '/includes/header.php';
 <?php endif; ?>
 
 <div class="panel">
+    <h2>Logboek toevoegen</h2>
+    <form method="post" class="logboek-form">
+        <input type="hidden" name="actie" value="logboek_toevoegen">
+        <textarea name="notitie" rows="3" placeholder="Typ hier een logboekregel..." required></textarea>
+        <button type="submit" class="btn">Toevoegen</button>
+    </form>
+</div>
+
+<div class="panel">
     <h2>Logboek</h2>
     <?php if (!$logboek): ?>
         <p class="log-leeg">Nog geen logboekregels.</p>
@@ -63,7 +81,7 @@ include __DIR__ . '/includes/header.php';
 </div>
 
 <div class="hint-toekomst">
-    <strong>Binnenkort:</strong> vanaf fase M2 kun je hier zelf een logboekregel toevoegen en met 1 tik je status doorgeven (OW · TP · IR · BS · PS · OP). Deze pagina is nu nog alleen-lezen.
+    <strong>Binnenkort:</strong> een foto uploaden bij een melding en de crew-lijst met een belknop (fase M3/M4).
 </div>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
