@@ -34,7 +34,7 @@ define('DB_CHARSET', env_of('DB_CHARSET', 'utf8mb4'));
 // ---- App -------------------------------------------------------------
 // Versienummer, apart bijgehouden van de MKAPP-fasering (M1 t/m M5) —
 // zie CHANGELOG.md voor wat er per versie is toegevoegd/gewijzigd.
-define('APP_VERSION', env_of('APP_VERSION', 'V0.0.2'));
+define('APP_VERSION', env_of('APP_VERSION', 'V0.0.3'));
 
 // ---- Overig ------------------------------------------------------------
 date_default_timezone_set(env_of('APP_TIMEZONE', 'Europe/Amsterdam'));

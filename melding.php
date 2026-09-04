@@ -16,9 +16,13 @@ if (!$melding) {
     exit;
 }
 
+$instellingen = mdt_instellingen($pdo, huidige_gebruiker_id());
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['actie'] ?? '') === 'logboek_toevoegen') {
+    // mag_schrijven server-side afdwingen (fase M6) -- niet alleen het
+    // formulier verbergen, ook de POST zelf weigeren.
     $tekst = trim($_POST['notitie'] ?? '');
-    if ($tekst !== '') {
+    if ($instellingen['mag_schrijven'] && $tekst !== '') {
         voeg_logboekregel_toe($pdo, $melding['id'], $tekst, huidige_gebruiker_id(), huidige_gebruiker_naam());
     }
     header('Location: /melding.php?id=' . $melding['id']);
@@ -58,6 +62,7 @@ include __DIR__ . '/includes/header.php';
     </div>
 <?php endif; ?>
 
+<?php if ($instellingen['mag_schrijven']): ?>
 <div class="panel">
     <h2>Logboek toevoegen</h2>
     <form method="post" class="logboek-form">
@@ -66,6 +71,7 @@ include __DIR__ . '/includes/header.php';
         <button type="submit" class="btn">Toevoegen</button>
     </form>
 </div>
+<?php endif; ?>
 
 <div class="panel">
     <h2>Logboek</h2>

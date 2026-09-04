@@ -1,5 +1,21 @@
 # Changelog — MDT
 
+## V0.0.3 (4-09-2026)
+
+- Inloggen bepaald door een losse MDT-gebruikerslijst in MKAPP
+  (Beheer > MDT-gebruikers), niet meer door de oude "Mag inloggen op
+  MDT"-schakelaar bij Beheer > Gebruikers. Vereist MKAPP V2.0.2.2.
+- Per account in te stellen (door een beheerder, in MKAPP): het
+  statusoverzicht (eenheidsstatus-knoppen) tonen of niet.
+- Per account een schakelaar "Toegewezen" / "Alle meldingen" — kan
+  ook een melding zien die niet aan jou of je team is toegewezen,
+  optioneel beperkt tot 1 classificatie (bv. alleen Medisch). Werkt
+  dan ook voor logboek/status op die meldingen, niet alleen bekijken.
+- Per account een alleen-lezen-stand: geen logboekregel meer kunnen
+  toevoegen. Staat los van het statusoverzicht.
+- Logboekregels vanuit MDT zijn in MKAPP nu herkenbaar aan een klein
+  "MDT"-label.
+
 ## V0.0.2 (4-09-2026)
 
 - Logboekregel toevoegen vanaf een melding (vrije tekst).

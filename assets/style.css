@@ -405,6 +405,28 @@ a { color: inherit; }
 .status-btn.actief .afk { color: var(--amber); }
 .status-btn.actief .naam { color: var(--amber); }
 
+/* ---- Weergave-schakelaar: toegewezen/alle meldingen (fase M6) ----- */
+.weergave-schakelaar {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+}
+.weergave-schakelaar a {
+    padding: 6px 12px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 12.5px;
+    font-weight: 600;
+}
+.weergave-schakelaar a.actief {
+    background: rgba(245,165,36,0.14);
+    border-color: var(--amber);
+    color: var(--amber);
+}
+
 /* ---- Logboek toevoegen (fase M2) ----------------------------------- */
 .logboek-form textarea {
     width: 100%;

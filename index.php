@@ -3,7 +3,13 @@ require_once __DIR__ . '/includes/functions.php';
 vereis_login();
 $pdo = get_pdo();
 
-$meldingen = mijn_meldingen($pdo, huidige_gebruiker_id());
+$instellingen = mdt_instellingen($pdo, huidige_gebruiker_id());
+
+// "Alle meldingen"-schakelaar (fase M6) -- alleen van toepassing als
+// de instelling dat toestaat; anders altijd terugvallen op "toegewezen".
+$weergave = ($_GET['weergave'] ?? '') === 'alle' && $instellingen['alle_meldingen'] ? 'alle' : 'toegewezen';
+
+$meldingen = mijn_meldingen($pdo, huidige_gebruiker_id(), false, $weergave);
 $mijn_status = huidige_eenheidsstatus($pdo, huidige_gebruiker_id());
 $mijn_team = mijn_team($pdo, huidige_gebruiker_id());
 
@@ -11,6 +17,7 @@ $paginatitel = 'Mijn meldingen';
 include __DIR__ . '/includes/header.php';
 ?>
 
+<?php if ($instellingen['toon_status_overzicht']): ?>
 <div class="panel status-panel">
     <h2>Mijn status<?= $mijn_team ? ' · ' . e($mijn_team['naam']) : '' ?></h2>
     <div class="status-grid">
@@ -28,10 +35,23 @@ include __DIR__ . '/includes/header.php';
         <p class="log-leeg">Nog geen eenheidsstatussen ingesteld.</p>
     <?php endif; ?>
 </div>
+<?php endif; ?>
 
 <div class="page-head">
     <h1>Mijn meldingen</h1>
-    <p>Actieve meldingen die aan jou zijn toegewezen<?= $mijn_team ? ' (rechtstreeks of via team ' . e($mijn_team['naam']) . ')' : '' ?>.</p>
+    <p>
+        <?php if ($weergave === 'alle'): ?>
+            Alle meldingen<?= $instellingen['hoofdclassificatie_id'] ? ' binnen jouw classificatie' : '' ?>.
+        <?php else: ?>
+            Actieve meldingen die aan jou zijn toegewezen<?= $mijn_team ? ' (rechtstreeks of via team ' . e($mijn_team['naam']) . ')' : '' ?>.
+        <?php endif; ?>
+    </p>
+    <?php if ($instellingen['alle_meldingen']): ?>
+        <div class="weergave-schakelaar">
+            <a href="/index.php" class="<?= $weergave === 'toegewezen' ? 'actief' : '' ?>">Toegewezen</a>
+            <a href="/index.php?weergave=alle" class="<?= $weergave === 'alle' ? 'actief' : '' ?>">Alle meldingen</a>
+        </div>
+    <?php endif; ?>
 </div>
 
 <div class="melding-lijst">

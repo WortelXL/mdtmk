@@ -5,25 +5,30 @@ MDT is het tweede systeem naast **MKAPP** (het meldkamersysteem zelf) en
 **MK-Intranet**: een eigen Docker-app die verbindt met **dezelfde**
 MariaDB-database als MKAPP, maar dan vanaf de telefoon van de crew.
 
-Status: **fase M2 — logboek, eenheidsstatus en Teams.** Zie
-`voorstel_mdt_fasering.md` in het MKAPP-project (Cowork) voor de
-volledige fasering (M1 t/m M5). Zie `CHANGELOG.md` voor de
-versiehistorie per wijziging.
+Status: **fase M2 + M6 — logboek, eenheidsstatus, Teams en los
+MDT-gebruikersbeheer.** Zie `voorstel_mdt_fasering.md` en
+`voorstel_mdt_gebruikersbeheer.md` in het MKAPP-project (Cowork) voor
+de volledige fasering. Zie `CHANGELOG.md` voor de versiehistorie per
+wijziging.
 
 ## Wat MDT tot nu toe doet
 
 - Inloggen met een bestaand MKAPP-account (of een account dat alleen
-  voor MDT is aangemaakt) — vereist dat `mag_inloggen_mdt` aan staat
-  voor dat account (Beheer → Gebruikers in MKAPP, sinds MKAPP V2.0.2.0).
+  voor MDT is aangemaakt) — vereist een actieve rij bij Beheer →
+  MDT-gebruikers in MKAPP (sinds MKAPP V2.0.2.2, fase M6).
 - Een lijst van je eigen, actief toegewezen meldingen — rechtstreeks
   (`toegewezen_aan_gebruiker_id`) of via een team dat aan je account
   gekoppeld is (`toegewezen_aan_team_id`, Beheer → Teams in MKAPP,
-  sinds MKAPP V2.0.2.1).
+  sinds MKAPP V2.0.2.1). Heeft je account "Alle meldingen" aanstaan
+  (fase M6), dan kun je wisselen naar een volledige lijst — optioneel
+  beperkt tot de classificatie van een gekoppelde rol.
 - De details van 1 melding, inclusief het bestaande logboek.
-- Zelf een logboekregel toevoegen (fase M2).
+- Zelf een logboekregel toevoegen (fase M2) — tenzij je account op
+  alleen-lezen staat (fase M6). Regels vanuit MDT zijn in MKAPP
+  herkenbaar met een "MDT"-label.
 - Met 1 tik je eenheidsstatus doorgeven (OW · TP · IR · BS · PS · OP,
   fase M2) — komt automatisch als logboekregel op elke actieve
-  toegewezen melding te staan.
+  toegewezen melding te staan. Kan per account uitgezet zijn (fase M6).
 
 Een foto uploaden/delen en de crew-lijst met bellen komen in fase
 M3/M4.
@@ -37,10 +42,10 @@ verbindt met de **bestaande** MKAPP-database. Zorg dus dat:
    (poort 3306, netwerk/firewall op orde — zie de "Openstaande punten"
    in het voorstel als MDT op een andere server komt te staan dan
    MKAPP).
-2. MKAPP zelf minimaal op **V2.0.2.1** staat (die versie voegt de
-   kolommen `mag_inloggen_mdt`, `huidige_eenheidsstatus_id` en de
-   tabellen `teams`/`eenheidsstatussen` toe — zonder die kan niemand
-   inloggen op MDT en werken de eenheidsstatus/Teams-functies niet).
+2. MKAPP zelf minimaal op **V2.0.2.2** staat (die versie voegt de
+   tabel `mdt_gebruikers` toe — zonder die kan niemand meer inloggen op
+   MDT, want MDT-toegang wordt sinds fase M6 daar bepaald, niet meer
+   via de oude `gebruikers.mag_inloggen_mdt`-kolom).
 
 ### Een beperkt databaseaccount voor MDT
 
@@ -62,6 +67,8 @@ GRANT SELECT ON mkapp.hoofdclassificaties TO 'mdt_user'@'%';
 GRANT SELECT ON mkapp.subclassificaties TO 'mdt_user'@'%';
 GRANT SELECT ON mkapp.teams TO 'mdt_user'@'%';
 GRANT SELECT ON mkapp.eenheidsstatussen TO 'mdt_user'@'%';
+GRANT SELECT ON mkapp.mdt_gebruikers TO 'mdt_user'@'%';
+GRANT SELECT ON mkapp.rollen TO 'mdt_user'@'%';
 
 -- Schrijven (fase M2: logboek terugschrijven + eenheidsstatus doorgeven)
 GRANT INSERT ON mkapp.melding_notities TO 'mdt_user'@'%';
@@ -70,9 +77,11 @@ GRANT UPDATE (huidige_eenheidsstatus_id) ON mkapp.gebruikers TO 'mdt_user'@'%';
 FLUSH PRIVILEGES;
 ```
 
-Had je dit account al vóór fase M2 aangemaakt? Dan is het genoeg om
-alleen de 4 nieuwe `GRANT`-regels hierboven (de laatste 4) opnieuw uit
-te voeren — de rest heb je al.
+Had je dit account al vóór fase M6 aangemaakt? Dan is het genoeg om
+alleen de 2 nieuwe regels hierboven (`mdt_gebruikers` en `rollen`)
+opnieuw uit te voeren — de rest heb je al. Had je het al vóór fase M2,
+dan gelden ook nog de 4 regels uit die fase (`teams`,
+`eenheidsstatussen`, het INSERT-recht en de kolom-update).
 
 ## Lokaal draaien
 
