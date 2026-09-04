@@ -12,6 +12,9 @@ $weergave = ($_GET['weergave'] ?? '') === 'alle' && $instellingen['alle_meldinge
 $meldingen = mijn_meldingen($pdo, huidige_gebruiker_id(), false, $weergave);
 $mijn_status = huidige_eenheidsstatus($pdo, huidige_gebruiker_id());
 $mijn_team = mijn_team($pdo, huidige_gebruiker_id());
+// Sinds fase M7: statussen horen bij een rol -- zonder gekoppelde rol
+// (mdt_instellingen['rol_id']) levert dit altijd een lege lijst op.
+$mijn_statussen = alle_eenheidsstatussen($pdo, $instellingen['rol_id'] ? (int) $instellingen['rol_id'] : null);
 
 $actief_nav = 'meldingen';
 $paginatitel = 'Mijn meldingen';
@@ -22,7 +25,7 @@ include __DIR__ . '/includes/header.php';
 <div class="panel status-panel">
     <h2>Mijn status<?= $mijn_team ? ' · ' . e($mijn_team['naam']) : '' ?></h2>
     <div class="status-grid">
-        <?php foreach (alle_eenheidsstatussen($pdo) as $s): ?>
+        <?php foreach ($mijn_statussen as $s): ?>
             <form method="post" action="/status.php">
                 <input type="hidden" name="eenheidsstatus_id" value="<?= $s['id'] ?>">
                 <button type="submit" class="status-btn <?= $mijn_status && $mijn_status['id'] === $s['id'] ? 'actief' : '' ?>">
@@ -32,8 +35,12 @@ include __DIR__ . '/includes/header.php';
             </form>
         <?php endforeach; ?>
     </div>
-    <?php if (!alle_eenheidsstatussen($pdo)): ?>
-        <p class="log-leeg">Nog geen eenheidsstatussen ingesteld.</p>
+    <?php if (!$mijn_statussen): ?>
+        <p class="log-leeg">
+            <?= $instellingen['rol_id']
+                ? 'Nog geen eenheidsstatussen ingesteld voor jouw rol (Beheer &gt; Eenheidsstatussen in MKAPP).'
+                : 'Je hebt nog geen rol gekoppeld — vraag een beheerder om dit in te stellen bij Beheer &gt; MDT-gebruikers in MKAPP, dan verschijnen hier je statusknoppen.' ?>
+        </p>
     <?php endif; ?>
 </div>
 <?php endif; ?>

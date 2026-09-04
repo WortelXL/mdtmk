@@ -308,16 +308,26 @@ function voeg_logboekregel_toe(PDO $pdo, int $melding_id, string $tekst, int $ge
     $stmt->execute(['m' => $melding_id, 'n' => $tekst, 'a' => $auteur_naam, 'g' => $gebruiker_id]);
 }
 
-// ---- Eenheidsstatus (fase M2) ------------------------------------------
+// ---- Eenheidsstatus (fase M2, per rol sinds fase M7) --------------------
 
-/** Alle eenheidsstatussen (OW/TP/IR/BS/PS/OP), op volgorde. */
-function alle_eenheidsstatussen(PDO $pdo): array
+/**
+ * De eenheidsstatussen die bij $rol_id horen, op volgorde. Sinds fase
+ * M7 hoort elke status bij precies 1 rol (Beheer > Eenheidsstatussen
+ * in MKAPP) — geen gekoppelde rol (null) levert dus altijd een lege
+ * lijst op, bewust geen generieke terugvallijst.
+ */
+function alle_eenheidsstatussen(PDO $pdo, ?int $rol_id): array
 {
-    static $cache = null;
-    if ($cache === null) {
-        $cache = $pdo->query('SELECT * FROM eenheidsstatussen ORDER BY volgorde ASC, id ASC')->fetchAll();
+    static $cache = [];
+    if ($rol_id === null) {
+        return [];
     }
-    return $cache;
+    if (!isset($cache[$rol_id])) {
+        $stmt = $pdo->prepare('SELECT * FROM eenheidsstatussen WHERE rol_id = :r ORDER BY volgorde ASC, id ASC');
+        $stmt->execute(['r' => $rol_id]);
+        $cache[$rol_id] = $stmt->fetchAll();
+    }
+    return $cache[$rol_id];
 }
 
 /** De eenheidsstatus die de gebruiker nu heeft, of null als die nog nooit gezet is. */
@@ -344,6 +354,11 @@ function huidige_eenheidsstatus(PDO $pdo, int $gebruiker_id): ?array
  * Staat `toon_status_overzicht` uit voor dit account (fase M6), dan
  * weigert deze functie server-side — los van `mag_schrijven`, dat gaat
  * alleen over het vrije-tekst-logboek (zie melding.php).
+ *
+ * Sinds fase M7 moet de status ook echt bij de eigen gekoppelde rol
+ * horen — dit is een server-side controle, niet alleen het verbergen
+ * van knoppen in de UI: zonder gekoppelde rol, of bij een status van
+ * een andere rol, weigert deze functie.
  */
 function zet_eenheidsstatus(PDO $pdo, int $gebruiker_id, int $eenheidsstatus_id, string $gebruiker_naam): ?array
 {
@@ -351,11 +366,14 @@ function zet_eenheidsstatus(PDO $pdo, int $gebruiker_id, int $eenheidsstatus_id,
     if (!$instellingen['toon_status_overzicht']) {
         return null;
     }
+    if (!$instellingen['rol_id']) {
+        return null;
+    }
 
     $status_stmt = $pdo->prepare('SELECT * FROM eenheidsstatussen WHERE id = :id');
     $status_stmt->execute(['id' => $eenheidsstatus_id]);
     $status = $status_stmt->fetch();
-    if (!$status) {
+    if (!$status || (int) $status['rol_id'] !== (int) $instellingen['rol_id']) {
         return null;
     }
 

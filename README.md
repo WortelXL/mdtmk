@@ -5,8 +5,9 @@ MDT is het tweede systeem naast **MKAPP** (het meldkamersysteem zelf) en
 **MK-Intranet**: een eigen Docker-app die verbindt met **dezelfde**
 MariaDB-database als MKAPP, maar dan vanaf de telefoon van de crew.
 
-Status: **fase M1 + M2 + M3 + M6 — logboek, eenheidsstatus, Teams,
-los MDT-gebruikersbeheer en een crew-lijst met bellen.** Zie
+Status: **fase M1 + M2 + M3 + M6 + M7 — logboek, eenheidsstatus (nu per
+rol), Teams, los MDT-gebruikersbeheer, een crew-lijst met bellen en een
+statusbeheer + plotbord.** Zie
 `voorstel_mdt_fasering.md` en `voorstel_mdt_gebruikersbeheer.md` in
 het MKAPP-project (Cowork) voor de volledige fasering. Zie
 `CHANGELOG.md` voor de versiehistorie per wijziging.
@@ -26,13 +27,21 @@ het MKAPP-project (Cowork) voor de volledige fasering. Zie
 - Zelf een logboekregel toevoegen (fase M2) — tenzij je account op
   alleen-lezen staat (fase M6). Regels vanuit MDT zijn in MKAPP
   herkenbaar met een "MDT"-label.
-- Met 1 tik je eenheidsstatus doorgeven (OW · TP · IR · BS · PS · OP,
-  fase M2) — komt automatisch als logboekregel op elke actieve
-  toegewezen melding te staan. Kan per account uitgezet zijn (fase M6).
+- Met 1 tik je eenheidsstatus doorgeven (fase M2) — komt automatisch
+  als logboekregel op elke actieve toegewezen melding te staan. Kan per
+  account uitgezet zijn (fase M6). Sinds fase M7 hoort elke status bij
+  een rol (bv. EHBO of Bouwploeg, zelf te beheren via Beheer >
+  Eenheidsstatussen in MKAPP) — je ziet alleen de statussen van je
+  eigen gekoppelde rol (Beheer > MDT-gebruikers in MKAPP); zonder
+  gekoppelde rol zie je geen statusknoppen.
 - Een crew-lijst met belknop (fase M3, nieuwe navigatietab "Crew") —
   de bestaande crew (contactpersonen zonder account) samen met je
   collega's die een MDT-account én telefoonnummer hebben, in 1
   gesorteerde lijst.
+- (In MKAPP zelf, fase M7) Een melding met een toegewezen team of
+  MDT-gebruiker toont voortaan diens actuele eenheidsstatus, en een
+  nieuw "Plotbord" (bij Meldingen in MKAPP) toont alle teams en losse
+  MDT-gebruikers met hun status in 1 overzicht.
 
 Een foto uploaden/delen komt in fase M4.
 
@@ -45,11 +54,15 @@ verbindt met de **bestaande** MKAPP-database. Zorg dus dat:
    (poort 3306, netwerk/firewall op orde — zie de "Openstaande punten"
    in het voorstel als MDT op een andere server komt te staan dan
    MKAPP).
-2. MKAPP zelf minimaal op **V2.0.2.3** staat (V2.0.2.2 voegt de tabel
+2. MKAPP zelf minimaal op **V2.0.2.4** staat (V2.0.2.2 voegt de tabel
    `mdt_gebruikers` toe — zonder die kan niemand meer inloggen op MDT,
    want MDT-toegang wordt sinds fase M6 daar bepaald, niet meer via de
    oude `gebruikers.mag_inloggen_mdt`-kolom; V2.0.2.3 voegt daar het
-   telefoonnummer-veld aan toe dat de crew-lijst gebruikt).
+   telefoonnummer-veld aan toe dat de crew-lijst gebruikt; V2.0.2.4
+   voegt een rol-koppeling toe aan `eenheidsstatussen` — zonder die
+   koppeling ziet niemand meer statusknoppen in MDT, geen nieuwe
+   GRANT-regel nodig, `eenheidsstatussen` en `rollen` waren al leesbaar
+   sinds fase M2/M6).
 
 ### Een beperkt databaseaccount voor MDT
 

@@ -1,5 +1,13 @@
 # Changelog — MDT
 
+## V0.0.5 (4-09-2026)
+
+- Eenheidsstatussen horen voortaan bij een rol (bv. EHBO of Bouwploeg,
+  te beheren op Beheer > Eenheidsstatussen in MKAPP) — je ziet in "Mijn
+  status" alleen de statussen van je eigen gekoppelde rol (Beheer >
+  MDT-gebruikers in MKAPP). Zonder gekoppelde rol zie je geen
+  statusknoppen. Vereist MKAPP V2.0.2.4.
+
 ## V0.0.4 (4-09-2026)
 
 - Nieuwe pagina "Crew" (nieuwe navigatietab bovenin) — een gecombineerde
