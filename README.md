@@ -98,5 +98,6 @@ mdtmk/
 ├── index.php                 "Mijn meldingen"
 ├── melding.php?id=           melddetail + logboek (alleen-lezen)
 ├── Dockerfile
-└── docker-compose.yml
+├── docker-compose.yml
+└── CHANGELOG.md            versiegeschiedenis (los van de MKAPP-fasering M1-M5)
 ```

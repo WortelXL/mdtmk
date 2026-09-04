@@ -32,7 +32,9 @@ define('DB_PASS', env_of('DB_PASS', 'wijzig_dit_wachtwoord'));
 define('DB_CHARSET', env_of('DB_CHARSET', 'utf8mb4'));
 
 // ---- App -------------------------------------------------------------
-define('APP_VERSION', env_of('APP_VERSION', 'M1'));
+// Versienummer, apart bijgehouden van de MKAPP-fasering (M1 t/m M5) —
+// zie CHANGELOG.md voor wat er per versie is toegevoegd/gewijzigd.
+define('APP_VERSION', env_of('APP_VERSION', 'V0.0.1'));
 
 // ---- Overig ------------------------------------------------------------
 date_default_timezone_set(env_of('APP_TIMEZONE', 'Europe/Amsterdam'));
