@@ -1,5 +1,13 @@
 # Changelog — MDT
 
+## V0.0.4 (4-09-2026)
+
+- Nieuwe pagina "Crew" (nieuwe navigatietab bovenin) — een gecombineerde
+  bellijst met de bestaande crew (contactpersonen zonder account) en
+  collega's met een MDT-account, elk met een grote belknop (`tel:`).
+  Telefoonnummers van accounts zijn per persoon in te stellen bij
+  Beheer > MDT-gebruikers in MKAPP. Vereist MKAPP V2.0.2.3.
+
 ## V0.0.3 (4-09-2026)
 
 - Inloggen bepaald door een losse MDT-gebruikerslijst in MKAPP

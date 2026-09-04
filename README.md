@@ -5,11 +5,11 @@ MDT is het tweede systeem naast **MKAPP** (het meldkamersysteem zelf) en
 **MK-Intranet**: een eigen Docker-app die verbindt met **dezelfde**
 MariaDB-database als MKAPP, maar dan vanaf de telefoon van de crew.
 
-Status: **fase M2 + M6 — logboek, eenheidsstatus, Teams en los
-MDT-gebruikersbeheer.** Zie `voorstel_mdt_fasering.md` en
-`voorstel_mdt_gebruikersbeheer.md` in het MKAPP-project (Cowork) voor
-de volledige fasering. Zie `CHANGELOG.md` voor de versiehistorie per
-wijziging.
+Status: **fase M1 + M2 + M3 + M6 — logboek, eenheidsstatus, Teams,
+los MDT-gebruikersbeheer en een crew-lijst met bellen.** Zie
+`voorstel_mdt_fasering.md` en `voorstel_mdt_gebruikersbeheer.md` in
+het MKAPP-project (Cowork) voor de volledige fasering. Zie
+`CHANGELOG.md` voor de versiehistorie per wijziging.
 
 ## Wat MDT tot nu toe doet
 
@@ -29,9 +29,12 @@ wijziging.
 - Met 1 tik je eenheidsstatus doorgeven (OW · TP · IR · BS · PS · OP,
   fase M2) — komt automatisch als logboekregel op elke actieve
   toegewezen melding te staan. Kan per account uitgezet zijn (fase M6).
+- Een crew-lijst met belknop (fase M3, nieuwe navigatietab "Crew") —
+  de bestaande crew (contactpersonen zonder account) samen met je
+  collega's die een MDT-account én telefoonnummer hebben, in 1
+  gesorteerde lijst.
 
-Een foto uploaden/delen en de crew-lijst met bellen komen in fase
-M3/M4.
+Een foto uploaden/delen komt in fase M4.
 
 ## Belangrijk: MDT heeft GEEN eigen database
 
@@ -42,10 +45,11 @@ verbindt met de **bestaande** MKAPP-database. Zorg dus dat:
    (poort 3306, netwerk/firewall op orde — zie de "Openstaande punten"
    in het voorstel als MDT op een andere server komt te staan dan
    MKAPP).
-2. MKAPP zelf minimaal op **V2.0.2.2** staat (die versie voegt de
-   tabel `mdt_gebruikers` toe — zonder die kan niemand meer inloggen op
-   MDT, want MDT-toegang wordt sinds fase M6 daar bepaald, niet meer
-   via de oude `gebruikers.mag_inloggen_mdt`-kolom).
+2. MKAPP zelf minimaal op **V2.0.2.3** staat (V2.0.2.2 voegt de tabel
+   `mdt_gebruikers` toe — zonder die kan niemand meer inloggen op MDT,
+   want MDT-toegang wordt sinds fase M6 daar bepaald, niet meer via de
+   oude `gebruikers.mag_inloggen_mdt`-kolom; V2.0.2.3 voegt daar het
+   telefoonnummer-veld aan toe dat de crew-lijst gebruikt).
 
 ### Een beperkt databaseaccount voor MDT
 
@@ -69,6 +73,7 @@ GRANT SELECT ON mkapp.teams TO 'mdt_user'@'%';
 GRANT SELECT ON mkapp.eenheidsstatussen TO 'mdt_user'@'%';
 GRANT SELECT ON mkapp.mdt_gebruikers TO 'mdt_user'@'%';
 GRANT SELECT ON mkapp.rollen TO 'mdt_user'@'%';
+GRANT SELECT ON mkapp.crew TO 'mdt_user'@'%';
 
 -- Schrijven (fase M2: logboek terugschrijven + eenheidsstatus doorgeven)
 GRANT INSERT ON mkapp.melding_notities TO 'mdt_user'@'%';
@@ -77,10 +82,11 @@ GRANT UPDATE (huidige_eenheidsstatus_id) ON mkapp.gebruikers TO 'mdt_user'@'%';
 FLUSH PRIVILEGES;
 ```
 
-Had je dit account al vóór fase M6 aangemaakt? Dan is het genoeg om
-alleen de 2 nieuwe regels hierboven (`mdt_gebruikers` en `rollen`)
-opnieuw uit te voeren — de rest heb je al. Had je het al vóór fase M2,
-dan gelden ook nog de 4 regels uit die fase (`teams`,
+Had je dit account al vóór fase M3 aangemaakt? Dan is het genoeg om
+alleen de nieuwe regel hierboven (`crew`) opnieuw uit te voeren — de
+rest heb je al. Had je het al vóór fase M6, dan gelden ook nog de 2
+regels uit die fase (`mdt_gebruikers` en `rollen`). Had je het al vóór
+fase M2, dan gelden ook nog de 4 regels uit die fase (`teams`,
 `eenheidsstatussen`, het INSERT-recht en de kolom-update).
 
 ## Lokaal draaien
@@ -119,6 +125,7 @@ mdtmk/
 ├── index.php                 "Mijn meldingen" + eenheidsstatus-knoppen
 ├── melding.php?id=           melddetail + logboek (lezen + toevoegen)
 ├── status.php                 POST-only: eenheidsstatus zetten
+├── crew.php                   Crew + collega's, gecombineerde bellijst (fase M3)
 ├── Dockerfile
 ├── docker-compose.yml
 └── CHANGELOG.md            versiegeschiedenis (los van de MKAPP-fasering M1-M5)

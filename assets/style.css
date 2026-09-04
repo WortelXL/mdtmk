@@ -444,3 +444,74 @@ a { color: inherit; }
     outline: none;
     border-color: var(--amber);
 }
+
+/* ---- Navigatie-tabbar (fase M3) ------------------------------------ */
+.tabbar {
+    display: flex;
+    position: sticky;
+    top: 53px;
+    z-index: 9;
+    background: rgba(10,13,19,0.92);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--border);
+}
+.tabbar a {
+    flex: 1;
+    text-align: center;
+    padding: 11px 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+}
+.tabbar a.actief {
+    color: var(--amber);
+    border-bottom-color: var(--amber);
+}
+
+/* ---- Crew-lijst met bellen (fase M3) -------------------------------- */
+.crew-lijst {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 14px;
+}
+.crew-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+}
+.crew-card .naam {
+    font-size: 15px;
+    font-weight: 600;
+}
+.crew-card .meta {
+    color: var(--muted);
+    font-size: 12.5px;
+    margin-top: 2px;
+}
+.bel-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--amber);
+    color: #1a1305;
+    font-size: 19px;
+    text-decoration: none;
+}
+.bel-btn:active { transform: scale(0.95); }
+.bel-btn-uit {
+    background: var(--panel-2);
+    color: var(--muted);
+    font-size: 15px;
+}

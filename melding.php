@@ -8,6 +8,7 @@ $melding = $id ? mijn_melding_ophalen($pdo, $id, huidige_gebruiker_id()) : null;
 
 if (!$melding) {
     http_response_code(404);
+    $actief_nav = 'meldingen';
     $paginatitel = 'Niet gevonden';
     include __DIR__ . '/includes/header.php';
     echo '<div class="empty">Deze melding bestaat niet, of is niet aan jou toegewezen.</div>';
@@ -31,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['actie'] ?? '') === 'logboe
 
 $logboek = melding_logboek($pdo, $melding['id']);
 
+$actief_nav = 'meldingen';
 $paginatitel = $melding['meld_id'];
 include __DIR__ . '/includes/header.php';
 ?>
@@ -87,7 +89,7 @@ include __DIR__ . '/includes/header.php';
 </div>
 
 <div class="hint-toekomst">
-    <strong>Binnenkort:</strong> een foto uploaden bij een melding en de crew-lijst met een belknop (fase M3/M4).
+    <strong>Binnenkort:</strong> een foto uploaden bij deze melding (fase M4).
 </div>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

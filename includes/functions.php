@@ -370,3 +370,27 @@ function zet_eenheidsstatus(PDO $pdo, int $gebruiker_id, int $eenheidsstatus_id,
 
     return $status;
 }
+
+// ---- Crew-lijst met bellen (fase M3) -----------------------------------
+
+/**
+ * Gecombineerde bellijst: de bestaande `crew`-tabel (contactpersonen
+ * zonder eigen account) samen met de actieve MDT-gebruikers die een
+ * telefoonnummer hebben (via Beheer > MDT-gebruikers in MKAPP, fase
+ * M3) — 1 gesorteerde lijst, zodat je onderweg niet tussen 2 losse
+ * lijstjes hoeft te kiezen om iemand te bellen. Iemand zonder
+ * telefoonnummer staat er gewoon bij (herkenbaar aan het ontbreken van
+ * een belknop) in plaats van stilzwijgend te verdwijnen.
+ */
+function crew_en_collegas(PDO $pdo): array
+{
+    return $pdo->query(
+        "SELECT naam, functie, telefoonnummer, 'crew' AS type FROM crew
+         UNION ALL
+         SELECT g.naam, g.functie, m.telefoonnummer, 'collega' AS type
+         FROM mdt_gebruikers m
+         JOIN gebruikers g ON g.id = m.gebruiker_id
+         WHERE m.actief = 1 AND g.actief = 1
+         ORDER BY naam ASC"
+    )->fetchAll();
+}

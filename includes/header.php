@@ -14,4 +14,10 @@
             <a href="/logout.php">Uitloggen</a>
         </div>
     </div>
+    <?php if (is_ingelogd()): ?>
+    <nav class="tabbar">
+        <a href="/index.php" class="<?= ($actief_nav ?? '') === 'meldingen' ? 'actief' : '' ?>">Meldingen</a>
+        <a href="/crew.php" class="<?= ($actief_nav ?? '') === 'crew' ? 'actief' : '' ?>">Crew</a>
+    </nav>
+    <?php endif; ?>
     <div class="container">

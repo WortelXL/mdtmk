@@ -13,6 +13,7 @@ $meldingen = mijn_meldingen($pdo, huidige_gebruiker_id(), false, $weergave);
 $mijn_status = huidige_eenheidsstatus($pdo, huidige_gebruiker_id());
 $mijn_team = mijn_team($pdo, huidige_gebruiker_id());
 
+$actief_nav = 'meldingen';
 $paginatitel = 'Mijn meldingen';
 include __DIR__ . '/includes/header.php';
 ?>
