@@ -1,0 +1,21 @@
+services:
+  app:
+    build: .
+    container_name: mdt_app
+    restart: unless-stopped
+    ports:
+      # MDT draait op een eigen poort naast MKAPP (die zelf poort 80
+      # gebruikt). Staat MDT op een andere server dan MKAPP, dan kan dit
+      # gewoon poort 80 worden -- pas dan hieronder aan.
+      - "8081:80"
+    environment:
+      # MDT heeft GEEN eigen db-service (zoals MKAPP die wel heeft) --
+      # het verbindt met de BESTAANDE, gedeelde MKAPP-database, eventueel
+      # over het netwerk als MDT op een andere server draait. Zie
+      # README.md voor het aanmaken van een beperkt DB-account.
+      DB_HOST: "wijzig_dit_naar_mkapp_db_host"
+      DB_PORT: "3306"
+      DB_NAME: "mkapp"
+      DB_USER: "mdt_user"
+      DB_PASS: "wijzig_dit_wachtwoord"
+      APP_TIMEZONE: "Europe/Amsterdam"
