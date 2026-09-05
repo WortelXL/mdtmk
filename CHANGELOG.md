@@ -1,5 +1,15 @@
 # Changelog — MDT
 
+## V0.0.7 (5-09-2026)
+
+- Push-berichten (fase M5) — wordt een melding aan een team toegewezen,
+  dan krijgt de MDT-gebruiker die op dat moment aan dat team gekoppeld
+  is een pushbericht op elk toestel waarop hij pushmeldingen heeft
+  aangezet (nieuw "Pushmeldingen"-paneel op Mijn meldingen). Een tik op
+  het bericht opent de melding direct. Vereist een geldig HTTPS-adres
+  voor MDT (werkt niet via het gewone lokale-netwerkadres) en een eigen
+  VAPID-sleutelpaar (zie README.md). Vereist MKAPP V2.0.2.6.
+
 ## V0.0.6 (5-09-2026)
 
 - Foto's toevoegen bij een melding (fase M4) — vanaf de melddetailpagina,

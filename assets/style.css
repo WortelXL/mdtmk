@@ -363,6 +363,14 @@ a { color: inherit; }
     margin-top: 28px;
 }
 
+/* ---- Pushmeldingen (fase M5) --------------------------------------- */
+.push-panel {
+    margin-top: 16px;
+}
+.push-panel .btn {
+    width: 100%;
+}
+
 /* ---- Mijn status (fase M2) --------------------------------------- */
 .status-panel {
     margin-top: 16px;

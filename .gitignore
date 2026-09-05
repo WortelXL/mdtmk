@@ -4,3 +4,8 @@
 uploads/*
 !uploads/.gitkeep
 data/
+
+# Composer (fase M5) -- vendor/ wordt bij elke Docker-build opnieuw
+# geïnstalleerd (zie Dockerfile), hoort dus niet in git.
+vendor/
+composer.lock

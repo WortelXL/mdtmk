@@ -10,6 +10,17 @@
 
 require_once __DIR__ . '/db.php';
 
+// Web Push-library (fase M5) -- alleen aanwezig ná `composer install`
+// (gebeurt automatisch tijdens de Docker-build, zie Dockerfile). Buiten
+// Docker (bv. een lokale php -S zonder composer install) bestaat dit
+// bestand niet -- de push-functies verderop in dit bestand controleren
+// dat zelf en doen dan gewoon niets, i.p.v. een fatale fout te geven.
+$mdt_webpush_autoload = __DIR__ . '/../vendor/autoload.php';
+if (is_file($mdt_webpush_autoload)) {
+    require_once $mdt_webpush_autoload;
+}
+unset($mdt_webpush_autoload);
+
 function e(?string $value): string
 {
     return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
@@ -489,4 +500,122 @@ function voeg_bijlage_toe(PDO $pdo, int $melding_id, array $bestand, int $gebrui
     voeg_logboekregel_toe($pdo, $melding_id, '📷 Foto toegevoegd: ' . $originele_naam, $gebruiker_id, $auteur_naam);
 
     return null;
+}
+
+// ---- Push-meldingen (fase M5) ----------------------------------------------
+
+/** Alle push-abonnementen (toestellen) van 1 gebruiker, nieuwste eerst. */
+function mijn_push_abonnementen(PDO $pdo, int $gebruiker_id): array
+{
+    $stmt = $pdo->prepare(
+        'SELECT id, toestel_omschrijving, aangemaakt_op FROM push_abonnementen
+         WHERE gebruiker_id = :g ORDER BY aangemaakt_op DESC'
+    );
+    $stmt->execute(['g' => $gebruiker_id]);
+    return $stmt->fetchAll();
+}
+
+/**
+ * Slaat een nieuw push-abonnement (toestel/browser) op voor deze
+ * gebruiker. "endpoint" is uniek (zie database.sql in de MKAPP-repo):
+ * meldt hetzelfde toestel zich opnieuw aan (bv. na het wissen van
+ * browserdata), dan werkt dit de bestaande rij bij in plaats van een
+ * dubbele aan te maken.
+ */
+function sla_push_abonnement_op(PDO $pdo, int $gebruiker_id, string $endpoint, string $p256dh, string $auth, ?string $toestel_omschrijving): void
+{
+    $stmt = $pdo->prepare(
+        'INSERT INTO push_abonnementen (gebruiker_id, endpoint, p256dh, auth, toestel_omschrijving)
+         VALUES (:g, :e, :p, :a, :t)
+         ON DUPLICATE KEY UPDATE gebruiker_id = VALUES(gebruiker_id), p256dh = VALUES(p256dh),
+             auth = VALUES(auth), toestel_omschrijving = VALUES(toestel_omschrijving)'
+    );
+    $stmt->execute([
+        'g' => $gebruiker_id,
+        'e' => $endpoint,
+        'p' => $p256dh,
+        'a' => $auth,
+        't' => $toestel_omschrijving,
+    ]);
+}
+
+/** Verwijdert het push-abonnement voor deze endpoint -- alleen als het echt van deze gebruiker is. */
+function verwijder_push_abonnement(PDO $pdo, int $gebruiker_id, string $endpoint): void
+{
+    $stmt = $pdo->prepare('DELETE FROM push_abonnementen WHERE gebruiker_id = :g AND endpoint = :e');
+    $stmt->execute(['g' => $gebruiker_id, 'e' => $endpoint]);
+}
+
+/**
+ * Verwijdert 1 push-abonnement op basis van zijn endpoint, ongeacht
+ * eigenaar -- gebruikt om een abonnement op te ruimen zodra de
+ * push-dienst zelf meldt dat het niet meer bestaat (HTTP 404/410).
+ */
+function verwijder_push_abonnement_op_endpoint(PDO $pdo, string $endpoint): void
+{
+    $stmt = $pdo->prepare('DELETE FROM push_abonnementen WHERE endpoint = :e');
+    $stmt->execute(['e' => $endpoint]);
+}
+
+/**
+ * Stuurt een pushbericht naar alle toestellen van 1 gebruiker (fase
+ * M5). Faalt altijd stil -- net als verstuur_webhooks() aan de
+ * MKAPP-kant mag een mislukte push nooit de aanroepende actie (het
+ * verwerken van de binnenkomende webhook) laten crashen. Ruimt
+ * onderweg abonnementen op die de push-dienst als verlopen/ongeldig
+ * meldt.
+ *
+ * Gebruikt de beproefde minishlink/web-push-library (composer) voor de
+ * VAPID-ondertekening en de payload-encryptie -- bewust geen
+ * zelfgebouwde cryptografie voor dit ene, foutgevoelige onderdeel (zie
+ * de toelichting in Dockerfile/README.md).
+ */
+function verstuur_push_naar_gebruiker(PDO $pdo, int $gebruiker_id, string $titel, string $tekst, string $url): void
+{
+    if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY || !class_exists(\Minishlink\WebPush\WebPush::class)) {
+        return; // nog geen VAPID-sleutelpaar ingesteld, of composer install nog niet gedraaid
+    }
+
+    $stmt = $pdo->prepare('SELECT endpoint, p256dh, auth FROM push_abonnementen WHERE gebruiker_id = :g');
+    $stmt->execute(['g' => $gebruiker_id]);
+    $abonnementen = $stmt->fetchAll();
+    if (!$abonnementen) {
+        return;
+    }
+
+    try {
+        $webPush = new \Minishlink\WebPush\WebPush([
+            'VAPID' => [
+                'subject'    => VAPID_SUBJECT,
+                'publicKey'  => VAPID_PUBLIC_KEY,
+                'privateKey' => VAPID_PRIVATE_KEY,
+            ],
+        ]);
+    } catch (Throwable $e) {
+        return; // ongeldig sleutelpaar -- niets te versturen
+    }
+
+    $payload = json_encode(['titel' => $titel, 'tekst' => $tekst, 'url' => $url], JSON_UNESCAPED_UNICODE);
+
+    foreach ($abonnementen as $abonnement) {
+        try {
+            $subscription = \Minishlink\WebPush\Subscription::create([
+                'endpoint' => $abonnement['endpoint'],
+                'keys'     => ['p256dh' => $abonnement['p256dh'], 'auth' => $abonnement['auth']],
+            ]);
+            $webPush->queueNotification($subscription, $payload);
+        } catch (Throwable $e) {
+            // Deze ene rij overslaan, de rest gewoon proberen.
+        }
+    }
+
+    try {
+        foreach ($webPush->flush() as $report) {
+            if (!$report->isSuccess() && $report->isSubscriptionExpired()) {
+                verwijder_push_abonnement_op_endpoint($pdo, $report->getEndpoint());
+            }
+        }
+    } catch (Throwable $e) {
+        // Nooit laten crashen op een kapotte/onbereikbare push-dienst.
+    }
 }

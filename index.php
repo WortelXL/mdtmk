@@ -45,6 +45,109 @@ include __DIR__ . '/includes/header.php';
 </div>
 <?php endif; ?>
 
+<div class="panel push-panel" id="push-panel">
+    <h2>Pushmeldingen</h2>
+    <p class="log-leeg" id="push-niet-beschikbaar" hidden>
+        Pushmeldingen zijn op dit toestel/deze verbinding niet
+        beschikbaar (vereist een beveiligde verbinding — werkt dus niet
+        via het gewone adres op het lokale netwerk, wel via het echte,
+        beveiligde MDT-adres).
+    </p>
+    <button type="button" class="btn" id="push-knop" hidden>Pushmeldingen aanzetten</button>
+</div>
+<script>
+(function () {
+    var VAPID_PUBLIC_KEY = <?= json_encode(VAPID_PUBLIC_KEY) ?>;
+    var knop = document.getElementById('push-knop');
+    var nietBeschikbaar = document.getElementById('push-niet-beschikbaar');
+
+    function urlBase64ToUint8Array(base64String) {
+        var padding = '='.repeat((4 - base64String.length % 4) % 4);
+        var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        var rawData = window.atob(base64);
+        var outputArray = new Uint8Array(rawData.length);
+        for (var i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    function stuurAbonneren(subscription) {
+        var json = subscription.toJSON();
+        return fetch('/push_abonneren.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                actie: 'abonneren',
+                endpoint: json.endpoint,
+                p256dh: json.keys.p256dh,
+                auth: json.keys.auth,
+            }),
+        });
+    }
+
+    function stuurAfmelden(endpoint) {
+        return fetch('/push_abonneren.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ actie: 'afmelden', endpoint: endpoint }),
+        });
+    }
+
+    function verversKnop(abonnement) {
+        knop.textContent = abonnement ? 'Pushmeldingen uitzetten' : 'Pushmeldingen aanzetten';
+        knop.dataset.staat = abonnement ? 'aan' : 'uit';
+    }
+
+    if (!VAPID_PUBLIC_KEY || !window.isSecureContext || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+        nietBeschikbaar.hidden = false;
+        return;
+    }
+
+    knop.hidden = false;
+
+    navigator.serviceWorker.register('/sw.js').then(function (registratie) {
+        return registratie.pushManager.getSubscription();
+    }).then(function (abonnement) {
+        verversKnop(abonnement);
+    }).catch(function () {
+        nietBeschikbaar.hidden = false;
+        knop.hidden = true;
+    });
+
+    knop.addEventListener('click', function () {
+        knop.disabled = true;
+        navigator.serviceWorker.ready.then(function (registratie) {
+            if (knop.dataset.staat === 'aan') {
+                return registratie.pushManager.getSubscription().then(function (abonnement) {
+                    if (!abonnement) {
+                        return;
+                    }
+                    var endpoint = abonnement.endpoint;
+                    return abonnement.unsubscribe().then(function () {
+                        return stuurAfmelden(endpoint);
+                    });
+                }).then(function () {
+                    verversKnop(null);
+                });
+            }
+            return registratie.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+            }).then(function (abonnement) {
+                return stuurAbonneren(abonnement).then(function () {
+                    verversKnop(abonnement);
+                });
+            });
+        }).catch(function () {
+            alert('Pushmeldingen inschakelen is niet gelukt. Controleer of je toestemming hebt gegeven.');
+        }).finally(function () {
+            knop.disabled = false;
+        });
+    });
+})();
+</script>
+
 <div class="page-head">
     <h1>Mijn meldingen</h1>
     <p>
