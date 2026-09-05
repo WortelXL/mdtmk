@@ -5,9 +5,9 @@ MDT is het tweede systeem naast **MKAPP** (het meldkamersysteem zelf) en
 **MK-Intranet**: een eigen Docker-app die verbindt met **dezelfde**
 MariaDB-database als MKAPP, maar dan vanaf de telefoon van de crew.
 
-Status: **fase M1 + M2 + M3 + M6 + M7 — logboek, eenheidsstatus (nu per
-rol), Teams, los MDT-gebruikersbeheer, een crew-lijst met bellen en een
-statusbeheer + plotbord.** Zie
+Status: **fase M1 + M2 + M3 + M6 + M7 + M4 — logboek, eenheidsstatus (nu
+per rol), Teams, los MDT-gebruikersbeheer, een crew-lijst met bellen,
+statusbeheer + plotbord, en foto's uploaden/delen.** Zie
 `voorstel_mdt_fasering.md` en `voorstel_mdt_gebruikersbeheer.md` in
 het MKAPP-project (Cowork) voor de volledige fasering. Zie
 `CHANGELOG.md` voor de versiehistorie per wijziging.
@@ -42,8 +42,15 @@ het MKAPP-project (Cowork) voor de volledige fasering. Zie
   MDT-gebruiker toont voortaan diens actuele eenheidsstatus, en een
   nieuw "Plotbord" (bij Meldingen in MKAPP) toont alle teams en losse
   MDT-gebruikers met hun status in 1 overzicht.
+- Foto's toevoegen bij een melding (fase M4) — vanaf de
+  melddetailpagina, naast het logboek, meerdere foto's per melding
+  (camera of galerij). Elke toevoeging komt ook als logboekregel te
+  staan; de foto zelf staat op MDT's eigen schijf/volume (niet in de
+  database), en is ook in MKAPP's eigen melding-pagina te zien. Kan
+  net als het logboek niet gebruikt worden als je account op
+  alleen-lezen staat (fase M6).
 
-Een foto uploaden/delen komt in fase M4.
+Een push-bericht ontvangen vanuit MKAPP komt in fase M5.
 
 ## Belangrijk: MDT heeft GEEN eigen database
 
@@ -54,7 +61,7 @@ verbindt met de **bestaande** MKAPP-database. Zorg dus dat:
    (poort 3306, netwerk/firewall op orde — zie de "Openstaande punten"
    in het voorstel als MDT op een andere server komt te staan dan
    MKAPP).
-2. MKAPP zelf minimaal op **V2.0.2.4** staat (V2.0.2.2 voegt de tabel
+2. MKAPP zelf minimaal op **V2.0.2.5** staat (V2.0.2.2 voegt de tabel
    `mdt_gebruikers` toe — zonder die kan niemand meer inloggen op MDT,
    want MDT-toegang wordt sinds fase M6 daar bepaald, niet meer via de
    oude `gebruikers.mag_inloggen_mdt`-kolom; V2.0.2.3 voegt daar het
@@ -62,7 +69,12 @@ verbindt met de **bestaande** MKAPP-database. Zorg dus dat:
    voegt een rol-koppeling toe aan `eenheidsstatussen` — zonder die
    koppeling ziet niemand meer statusknoppen in MDT, geen nieuwe
    GRANT-regel nodig, `eenheidsstatussen` en `rollen` waren al leesbaar
-   sinds fase M2/M6).
+   sinds fase M2/M6; V2.0.2.5 voegt de tabel `melding_bijlagen` toe —
+   zonder die kan MDT geen foto's meer wegschrijven en toont MKAPP's
+   melding-pagina geen "Foto's"-sectie).
+3. `APP_BASE_URL` (zie hieronder) op MDT zelf goed staat, anders wijst
+   een geuploade foto naar een adres dat niemand buiten MDT kan
+   bereiken.
 
 ### Een beperkt databaseaccount voor MDT
 
@@ -87,20 +99,40 @@ GRANT SELECT ON mkapp.eenheidsstatussen TO 'mdt_user'@'%';
 GRANT SELECT ON mkapp.mdt_gebruikers TO 'mdt_user'@'%';
 GRANT SELECT ON mkapp.rollen TO 'mdt_user'@'%';
 GRANT SELECT ON mkapp.crew TO 'mdt_user'@'%';
+GRANT SELECT ON mkapp.melding_bijlagen TO 'mdt_user'@'%';
 
--- Schrijven (fase M2: logboek terugschrijven + eenheidsstatus doorgeven)
+-- Schrijven (fase M2: logboek terugschrijven + eenheidsstatus doorgeven;
+-- fase M4: foto-metadata wegschrijven)
 GRANT INSERT ON mkapp.melding_notities TO 'mdt_user'@'%';
 GRANT UPDATE (huidige_eenheidsstatus_id) ON mkapp.gebruikers TO 'mdt_user'@'%';
+GRANT INSERT ON mkapp.melding_bijlagen TO 'mdt_user'@'%';
 
 FLUSH PRIVILEGES;
 ```
 
-Had je dit account al vóór fase M3 aangemaakt? Dan is het genoeg om
-alleen de nieuwe regel hierboven (`crew`) opnieuw uit te voeren — de
-rest heb je al. Had je het al vóór fase M6, dan gelden ook nog de 2
-regels uit die fase (`mdt_gebruikers` en `rollen`). Had je het al vóór
-fase M2, dan gelden ook nog de 4 regels uit die fase (`teams`,
-`eenheidsstatussen`, het INSERT-recht en de kolom-update).
+Had je dit account al vóór fase M4 aangemaakt? Dan is het genoeg om
+alleen de 2 nieuwe regels hierboven (`melding_bijlagen` lezen +
+schrijven) opnieuw uit te voeren — de rest heb je al. Had je het al
+vóór fase M3, dan geldt ook nog de regel uit die fase (`crew`). Had je
+het al vóór fase M6, dan gelden ook nog de 2 regels uit die fase
+(`mdt_gebruikers` en `rollen`). Had je het al vóór fase M2, dan gelden
+ook nog de 4 regels uit die fase (`teams`, `eenheidsstatussen`, het
+INSERT-recht en de kolom-update).
+
+### Foto's: eigen opslag + APP_BASE_URL (fase M4)
+
+Foto's die vanuit MDT geupload worden, komen NIET in de database
+terecht — ze staan als gewone bestanden op MDT's eigen schijf/volume
+(`/uploads`, zie `docker-compose.yml`), alleen de bestandsnaam + een
+volledige URL komen in de gedeelde tabel `melding_bijlagen` te staan.
+Die URL wordt opgebouwd uit de omgevingsvariabele `APP_BASE_URL` — zet
+die dus op het adres waarop MDT voor de kijker (dus ook iemand die
+MKAPP gebruikt, niet alleen de crew op straat) daadwerkelijk bereikbaar
+is. Lokaal/tijdens testen is de standaardwaarde
+(`http://localhost:8081`) prima; zodra MDT een eigen domein heeft, pas
+je dit aan in `docker-compose.yml`. Vergeet de foto's zelf niet mee te
+nemen in je eigen back-upstrategie — deze staan niet in de MariaDB-
+database en dus ook niet in een eventuele databasebackup.
 
 ## Lokaal draaien
 
@@ -116,6 +148,12 @@ Pas in `docker-compose.yml` de environment-variabelen aan:
 - `DB_USER` / `DB_PASS` — het beperkte MDT-account hierboven
 - Poort: standaard `8081:80` (MKAPP zelf gebruikt al poort 80) — komt
   MDT op een andere server te staan, dan kan dit gewoon `80:80` worden.
+- `APP_BASE_URL` (fase M4) — zie hierboven; hoort bij dezelfde poort/
+  domein als je hierboven instelt.
+
+De `volumes`-regel in `docker-compose.yml` (`./data/uploads:/var/www/html/uploads`)
+zorgt dat geuploade foto's bewaard blijven bij een herstart/rebuild —
+niet weghalen.
 
 ## Technische stack
 
@@ -136,9 +174,10 @@ mdtmk/
 ├── login.php
 ├── logout.php
 ├── index.php                 "Mijn meldingen" + eenheidsstatus-knoppen
-├── melding.php?id=           melddetail + logboek (lezen + toevoegen)
+├── melding.php?id=           melddetail + logboek + foto's (lezen + toevoegen)
 ├── status.php                 POST-only: eenheidsstatus zetten
 ├── crew.php                   Crew + collega's, gecombineerde bellijst (fase M3)
+├── uploads/                   geuploade foto's (fase M4, niet in git -- via volume)
 ├── Dockerfile
 ├── docker-compose.yml
 └── CHANGELOG.md            versiegeschiedenis (los van de MKAPP-fasering M1-M5)

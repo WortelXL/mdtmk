@@ -1,1 +1,6 @@
 .DS_Store
+
+# Geuploade foto's (fase M4) -- lokaal/op het volume, niet in git
+uploads/*
+!uploads/.gitkeep
+data/

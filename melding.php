@@ -30,7 +30,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['actie'] ?? '') === 'logboe
     exit;
 }
 
+$foto_fout = null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['actie'] ?? '') === 'foto_toevoegen') {
+    // mag_schrijven server-side afdwingen (fase M6), zelfde als bij het
+    // logboek -- een foto toevoegen is ook een schrijfactie.
+    if ($instellingen['mag_schrijven']) {
+        foreach ($_FILES['fotos']['name'] ?? [] as $i => $naam) {
+            $bestand = [
+                'name'     => $_FILES['fotos']['name'][$i],
+                'type'     => $_FILES['fotos']['type'][$i],
+                'tmp_name' => $_FILES['fotos']['tmp_name'][$i],
+                'error'    => $_FILES['fotos']['error'][$i],
+                'size'     => $_FILES['fotos']['size'][$i],
+            ];
+            $fout = voeg_bijlage_toe($pdo, $melding['id'], $bestand, huidige_gebruiker_id(), huidige_gebruiker_naam());
+            if ($fout && !$foto_fout) {
+                $foto_fout = $fout;
+            }
+        }
+    }
+    if (!$foto_fout) {
+        header('Location: /melding.php?id=' . $melding['id']);
+        exit;
+    }
+}
+
 $logboek = melding_logboek($pdo, $melding['id']);
+$bijlagen = melding_bijlagen($pdo, $melding['id']);
 
 $actief_nav = 'meldingen';
 $paginatitel = $melding['meld_id'];
@@ -88,8 +114,33 @@ include __DIR__ . '/includes/header.php';
     <?php endforeach; ?>
 </div>
 
-<div class="hint-toekomst">
-    <strong>Binnenkort:</strong> een foto uploaden bij deze melding (fase M4).
+<?php if ($instellingen['mag_schrijven']): ?>
+<div class="panel">
+    <h2>Foto toevoegen</h2>
+    <?php if ($foto_fout): ?>
+        <div class="alert alert-fout"><?= e($foto_fout) ?></div>
+    <?php endif; ?>
+    <form method="post" enctype="multipart/form-data" class="foto-form">
+        <input type="hidden" name="actie" value="foto_toevoegen">
+        <input type="file" name="fotos[]" accept="image/*" capture="environment" multiple required>
+        <button type="submit" class="btn">Foto('s) toevoegen</button>
+    </form>
+</div>
+<?php endif; ?>
+
+<div class="panel">
+    <h2>Foto's</h2>
+    <?php if (!$bijlagen): ?>
+        <p class="log-leeg">Nog geen foto's toegevoegd.</p>
+    <?php else: ?>
+        <div class="foto-grid">
+            <?php foreach ($bijlagen as $b): ?>
+                <a href="<?= e($b['url']) ?>" target="_blank" rel="noopener" class="foto-thumb-link">
+                    <img src="<?= e($b['url']) ?>" alt="<?= e($b['bestandsnaam']) ?>" class="foto-thumb" loading="lazy">
+                </a>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 </div>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

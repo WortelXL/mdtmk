@@ -19,3 +19,15 @@ services:
       DB_USER: "mdt_user"
       DB_PASS: "wijzig_dit_wachtwoord"
       APP_TIMEZONE: "Europe/Amsterdam"
+      # Fase M4: het publieke adres waarop MDT zelf bereikbaar is --
+      # hierop gebaseerd wordt de volledige foto-URL opgebouwd die in de
+      # gedeelde database komt, zodat MKAPP een geuploade foto rechtstreeks
+      # bij MDT kan tonen. Pas dit aan zodra MDT een eigen domein heeft
+      # (en zorg dat dat domein ook echt bereikbaar is voor wie MKAPP
+      # gebruikt, niet alleen voor de crew op straat).
+      APP_BASE_URL: "http://localhost:8081"
+    volumes:
+      # Fase M4: geuploade foto's blijven bewaard als de container
+      # herstart/opnieuw gebouwd wordt (anders verdwijnen ze bij elke
+      # `docker compose up -d --build`).
+      - ./data/uploads:/var/www/html/uploads

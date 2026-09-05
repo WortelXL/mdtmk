@@ -1,5 +1,13 @@
 # Changelog — MDT
 
+## V0.0.6 (5-09-2026)
+
+- Foto's toevoegen bij een melding (fase M4) — vanaf de melddetailpagina,
+  naast het logboek. Meerdere foto's per melding toegestaan (camera of
+  galerij). Elke toevoeging komt ook als logboekregel te staan, en de
+  foto's zelf zijn terug te zien op de melding, ook in MKAPP zelf.
+  Vereist MKAPP V2.0.2.5.
+
 ## V0.0.5 (4-09-2026)
 
 - Eenheidsstatussen horen voortaan bij een rol (bv. EHBO of Bouwploeg,

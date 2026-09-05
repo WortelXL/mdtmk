@@ -412,3 +412,81 @@ function crew_en_collegas(PDO $pdo): array
          ORDER BY naam ASC"
     )->fetchAll();
 }
+
+// ---- Foto's (fase M4) ----------------------------------------------------
+
+/** Toegestane afbeeldingstypen voor een foto-upload, met hun opslag-extensie. */
+function toegestane_foto_mimetypes(): array
+{
+    return [
+        'image/jpeg' => 'jpg',
+        'image/png'  => 'png',
+        'image/webp' => 'webp',
+        'image/gif'  => 'gif',
+    ];
+}
+
+/** Foto's bij 1 melding, nieuwste eerst. */
+function melding_bijlagen(PDO $pdo, int $melding_id): array
+{
+    $stmt = $pdo->prepare('SELECT * FROM melding_bijlagen WHERE melding_id = :m ORDER BY aangemaakt_op DESC');
+    $stmt->execute(['m' => $melding_id]);
+    return $stmt->fetchAll();
+}
+
+/**
+ * Verwerkt 1 geuploade foto (1 item uit $_FILES) voor een melding:
+ * valideert het bestand echt als afbeelding (niet alleen de extensie of
+ * het Content-Type dat de browser meestuurt, via getimagesize()), slaat
+ * het op onder een willekeurige, niet-raadbare bestandsnaam op MDT's
+ * eigen schijf/volume (/uploads/<melding_id>/...), zet de metadata +
+ * volledige URL in de gedeelde database, en plaatst een logboekregel
+ * zodat de toevoeging ook in het bestaande logboek zichtbaar is.
+ * Aanroeper moet zelf al bevestigd hebben dat deze melding aan de
+ * gebruiker toegewezen/zichtbaar is en dat mag_schrijven aan staat --
+ * deze functie doet zelf geen ownership-check.
+ *
+ * @param array $bestand 1 item uit $_FILES (dus met tmp_name/name/size/error)
+ * @return string|null null bij succes, anders een foutmelding voor de gebruiker
+ */
+function voeg_bijlage_toe(PDO $pdo, int $melding_id, array $bestand, int $gebruiker_id, string $auteur_naam): ?string
+{
+    if (($bestand['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+        return null; // niets gekozen voor dit veld, geen foutmelding nodig
+    }
+    if ($bestand['error'] !== UPLOAD_ERR_OK) {
+        return 'Uploaden van "' . $bestand['name'] . '" is mislukt (foutcode ' . $bestand['error'] . ').';
+    }
+    if (($bestand['size'] ?? 0) <= 0) {
+        return 'Leeg bestand overgeslagen: ' . $bestand['name'];
+    }
+
+    $toegestaan = toegestane_foto_mimetypes();
+    $info = @getimagesize($bestand['tmp_name']);
+    $mime = $info['mime'] ?? null;
+    if (!$mime || !isset($toegestaan[$mime])) {
+        return 'Alleen afbeeldingen (jpg, png, webp, gif) kunnen toegevoegd worden: ' . $bestand['name'];
+    }
+
+    $map = __DIR__ . '/../uploads/' . $melding_id;
+    if (!is_dir($map) && !mkdir($map, 0775, true) && !is_dir($map)) {
+        return 'Kon de foto niet opslaan (map aanmaken mislukt): ' . $bestand['name'];
+    }
+
+    $opslagnaam = bin2hex(random_bytes(8)) . '.' . $toegestaan[$mime];
+    if (!move_uploaded_file($bestand['tmp_name'], $map . '/' . $opslagnaam)) {
+        return 'Kon de foto niet opslaan: ' . $bestand['name'];
+    }
+
+    $url = APP_BASE_URL . '/uploads/' . $melding_id . '/' . $opslagnaam;
+    $originele_naam = $bestand['name'] !== '' ? $bestand['name'] : $opslagnaam;
+
+    $stmt = $pdo->prepare(
+        'INSERT INTO melding_bijlagen (melding_id, bestandsnaam, url, geupload_door_gebruiker_id) VALUES (:m, :b, :u, :g)'
+    );
+    $stmt->execute(['m' => $melding_id, 'b' => $originele_naam, 'u' => $url, 'g' => $gebruiker_id]);
+
+    voeg_logboekregel_toe($pdo, $melding_id, '📷 Foto toegevoegd: ' . $originele_naam, $gebruiker_id, $auteur_naam);
+
+    return null;
+}
