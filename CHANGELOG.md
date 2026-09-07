@@ -1,5 +1,19 @@
 # Changelog — MDT
 
+## V0.0.8 (7-09-2026)
+
+- Pushmeldingen bij toewijzing: zet je op "Mijn meldingen" een schakelaar
+  aan, dan krijg je voortaan een echte browser-melding op dat apparaat
+  zodra een melding aan jou (of je team) wordt toegewezen -- ook als MDT
+  niet open staat. Volledig zelf gebouwd (RFC 8291/8292: VAPID +
+  end-to-end-versleuteling met alleen PHP's ingebouwde `openssl`), dus
+  geen externe library en geen omweg via een 3e-partij-dienst. Vereist
+  eenmalig een VAPID-sleutelpaar (`genereer_vapid_sleutels.php`) en een
+  webhook in MKAPP naar `webhook_ontvangen.php` -- zie README.md.
+  Werkt alleen via HTTPS; zonder HTTPS of op een verouderde browser
+  blijft het schakelpaneel gewoon verborgen en werkt de rest van MDT
+  onveranderd door. Vereist MKAPP V2.0.2.12.
+
 ## V0.0.7 (7-09-2026)
 
 - Telefoonvriendelijker gemaakt op de bestaande schermen:

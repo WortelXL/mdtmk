@@ -26,6 +26,16 @@ services:
       # (en zorg dat dat domein ook echt bereikbaar is voor wie MKAPP
       # gebruikt, niet alleen voor de crew op straat).
       APP_BASE_URL: "http://localhost:8081"
+      # Fase M5: pushmeldingen bij toewijzing (optioneel -- leeg laten
+      # betekent dat het pushmeldingen-paneel gewoon verborgen blijft).
+      # Genereer VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY 1x met
+      # `docker compose exec mdt php genereer_vapid_sleutels.php` (zie
+      # README.md); WEBHOOK_TOKEN is een eigen, lang willekeurig geheim
+      # dat je ook in MKAPP's webhook-URL zet (Beheer > Connectiviteit).
+      VAPID_PUBLIC_KEY: ""
+      VAPID_PRIVATE_KEY: ""
+      VAPID_SUBJECT: "mailto:beheer@voorbeeld.nl"
+      WEBHOOK_TOKEN: ""
     volumes:
       # Fase M4: geuploade foto's blijven bewaard als de container
       # herstart/opnieuw gebouwd wordt (anders verdwijnen ze bij elke

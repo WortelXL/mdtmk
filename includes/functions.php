@@ -490,3 +490,57 @@ function voeg_bijlage_toe(PDO $pdo, int $melding_id, array $bestand, int $gebrui
 
     return null;
 }
+
+// ---- Web Push-abonnementen (fase M5) ---------------------------------------
+
+/**
+ * Slaat een pushabonnement op (of ververst een bestaand abonnement met
+ * dezelfde endpoint voor deze gebruiker -- een browser levert soms een
+ * nieuwe p256dh/auth voor dezelfde endpoint bij hernieuwing). 1 rij per
+ * combinatie van gebruiker + browser/apparaat.
+ */
+function push_abonnement_opslaan(PDO $pdo, int $gebruiker_id, string $endpoint, string $p256dh, string $auth, ?string $omschrijving): void
+{
+    $stmt = $pdo->prepare(
+        'INSERT INTO push_abonnementen (gebruiker_id, endpoint, p256dh, auth, omschrijving)
+         VALUES (:g, :e, :p, :a, :o)
+         ON DUPLICATE KEY UPDATE p256dh = VALUES(p256dh), auth = VALUES(auth), omschrijving = VALUES(omschrijving)'
+    );
+    $stmt->execute([
+        'g' => $gebruiker_id,
+        'e' => $endpoint,
+        'p' => $p256dh,
+        'a' => $auth,
+        'o' => $omschrijving,
+    ]);
+}
+
+/** Verwijdert 1 pushabonnement van deze gebruiker (bv. bij uitzetten, of een verlopen abonnement). */
+function push_abonnement_verwijderen(PDO $pdo, int $gebruiker_id, string $endpoint): void
+{
+    $stmt = $pdo->prepare('DELETE FROM push_abonnementen WHERE gebruiker_id = :g AND endpoint = :e');
+    $stmt->execute(['g' => $gebruiker_id, 'e' => $endpoint]);
+}
+
+/** Heeft deze gebruiker op dit moment minstens 1 actief pushabonnement (voor de aan/uit-status van het paneel)? */
+function heeft_push_abonnement(PDO $pdo, int $gebruiker_id): bool
+{
+    $stmt = $pdo->prepare('SELECT 1 FROM push_abonnementen WHERE gebruiker_id = :g LIMIT 1');
+    $stmt->execute(['g' => $gebruiker_id]);
+    return (bool) $stmt->fetchColumn();
+}
+
+/** Alle pushabonnementen van 1 gebruiker (gebruikt door webhook_ontvangen.php om te versturen). */
+function push_abonnementen_voor_gebruiker(PDO $pdo, int $gebruiker_id): array
+{
+    $stmt = $pdo->prepare('SELECT * FROM push_abonnementen WHERE gebruiker_id = :g');
+    $stmt->execute(['g' => $gebruiker_id]);
+    return $stmt->fetchAll();
+}
+
+/** Verwijdert 1 pushabonnement op basis van zijn id (bv. nadat de pushdienst 404/410 teruggaf -- het abonnement bestaat niet meer). */
+function push_abonnement_verwijderen_op_id(PDO $pdo, int $abonnement_id): void
+{
+    $stmt = $pdo->prepare('DELETE FROM push_abonnementen WHERE id = :id');
+    $stmt->execute(['id' => $abonnement_id]);
+}

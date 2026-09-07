@@ -71,7 +71,11 @@ verbindt met de **bestaande** MKAPP-database. Zorg dus dat:
    GRANT-regel nodig, `eenheidsstatussen` en `rollen` waren al leesbaar
    sinds fase M2/M6; V2.0.2.5 voegt de tabel `melding_bijlagen` toe —
    zonder die kan MDT geen foto's meer wegschrijven en toont MKAPP's
-   melding-pagina geen "Foto's"-sectie).
+   melding-pagina geen "Foto's"-sectie; V2.0.2.12 voegt de tabel
+   `push_abonnementen` toe en zet `gekoppelde_gebruiker_id` in de
+   payload van de `melding_toegewezen`-webhook (fase M5) — zonder die
+   2 dingen blijft het pushmeldingen-paneel in MDT gewoon verborgen, de
+   rest van MDT werkt onveranderd door).
 3. `APP_BASE_URL` (zie hieronder) op MDT zelf goed staat, anders wijst
    een geuploade foto naar een adres dat niemand buiten MDT kan
    bereiken.
@@ -100,24 +104,29 @@ GRANT SELECT ON mkapp.mdt_gebruikers TO 'mdt_user'@'%';
 GRANT SELECT ON mkapp.rollen TO 'mdt_user'@'%';
 GRANT SELECT ON mkapp.crew TO 'mdt_user'@'%';
 GRANT SELECT ON mkapp.melding_bijlagen TO 'mdt_user'@'%';
+GRANT SELECT ON mkapp.push_abonnementen TO 'mdt_user'@'%';
 
 -- Schrijven (fase M2: logboek terugschrijven + eenheidsstatus doorgeven;
--- fase M4: foto-metadata wegschrijven)
+-- fase M4: foto-metadata wegschrijven; fase M5: pushabonnementen
+-- opslaan/verwijderen)
 GRANT INSERT ON mkapp.melding_notities TO 'mdt_user'@'%';
 GRANT UPDATE (huidige_eenheidsstatus_id) ON mkapp.gebruikers TO 'mdt_user'@'%';
 GRANT INSERT ON mkapp.melding_bijlagen TO 'mdt_user'@'%';
+GRANT INSERT, UPDATE, DELETE ON mkapp.push_abonnementen TO 'mdt_user'@'%';
 
 FLUSH PRIVILEGES;
 ```
 
-Had je dit account al vóór fase M4 aangemaakt? Dan is het genoeg om
-alleen de 2 nieuwe regels hierboven (`melding_bijlagen` lezen +
-schrijven) opnieuw uit te voeren — de rest heb je al. Had je het al
-vóór fase M3, dan geldt ook nog de regel uit die fase (`crew`). Had je
-het al vóór fase M6, dan gelden ook nog de 2 regels uit die fase
-(`mdt_gebruikers` en `rollen`). Had je het al vóór fase M2, dan gelden
-ook nog de 4 regels uit die fase (`teams`, `eenheidsstatussen`, het
-INSERT-recht en de kolom-update).
+Had je dit account al vóór fase M5 aangemaakt? Dan is het genoeg om
+alleen de 2 nieuwe regels hierboven (`push_abonnementen` lezen +
+schrijven/verwijderen) opnieuw uit te voeren — de rest heb je al. Had
+je het al vóór fase M4, dan gelden ook nog de 2 regels uit die fase
+(`melding_bijlagen` lezen + schrijven). Had je het al vóór fase M3,
+dan geldt ook nog de regel uit die fase (`crew`). Had je het al vóór
+fase M6, dan gelden ook nog de 2 regels uit die fase (`mdt_gebruikers`
+en `rollen`). Had je het al vóór fase M2, dan gelden ook nog de 4
+regels uit die fase (`teams`, `eenheidsstatussen`, het INSERT-recht en
+de kolom-update).
 
 ### Foto's: eigen opslag + APP_BASE_URL (fase M4)
 
@@ -133,6 +142,39 @@ is. Lokaal/tijdens testen is de standaardwaarde
 je dit aan in `docker-compose.yml`. Vergeet de foto's zelf niet mee te
 nemen in je eigen back-upstrategie — deze staan niet in de MariaDB-
 database en dus ook niet in een eventuele databasebackup.
+
+### Pushmeldingen bij toewijzing (fase M5)
+
+MDT kan een echte browser-pushmelding sturen zodra een melding aan jou
+(of je team) wordt toegewezen — zonder externe library (composer) en
+zonder een omweg via een 3e-partij-dienst: de versleuteling (RFC 8291)
+en het VAPID-JWT (RFC 8292) zijn met PHP's eigen `openssl`-extensie
+geïmplementeerd, zie `includes/webpush.php`. Optioneel: staat er geen
+VAPID-sleutelpaar ingesteld, dan blijft het pushmeldingen-paneel op
+"Mijn meldingen" gewoon verborgen en werkt de rest van MDT onveranderd.
+
+1. Genereer 1x een sleutelpaar:
+   ```bash
+   docker compose exec mdt php genereer_vapid_sleutels.php
+   ```
+   Zet de 2 geprinte regels (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`) als
+   omgevingsvariabelen in `docker-compose.yml`, samen met `VAPID_SUBJECT`
+   (een `mailto:`-adres, mag algemeen/fictief zijn) en een eigen, lang
+   willekeurig `WEBHOOK_TOKEN`. Herstart MDT daarna.
+2. Stel in MKAPP bij **Beheer > Connectiviteit** een webhook in:
+   - URL: `https://<mdt-domein>/webhook_ontvangen.php?token=<jouw WEBHOOK_TOKEN>`
+   - Events: `melding_toegewezen`
+   - Platform: generiek
+3. Elke gebruiker zet pushmeldingen zelf aan/uit via de schakelaar op
+   "Mijn meldingen" (verschijnt alleen als de browser het ondersteunt
+   én er een VAPID-sleutelpaar is ingesteld). Vereist HTTPS — een
+   browser laat `pushManager.subscribe()` niet toe op gewoon `http://`
+   (behalve `localhost` tijdens testen); zonder HTTPS blijft het paneel
+   verborgen, de rest van MDT blijft gewoon werken op een lokaal
+   netwerkadres.
+4. Een verlopen/ingetrokken abonnement (bv. browserdata gewist) ruimt
+   `webhook_ontvangen.php` vanzelf op zodra de pushdienst dat meldt
+   (HTTP 404/410) — hier is verder geen beheer voor nodig.
 
 ## Lokaal draaien
 
@@ -165,18 +207,23 @@ minimale schermen.
 
 ```
 mdtmk/
-├── config.php              DB-verbinding (via env-variabelen)
+├── config.php              DB-verbinding + VAPID/webhook-instellingen (via env-variabelen)
 ├── includes/
 │   ├── db.php               get_pdo()
-│   ├── functions.php        inloggen, meldingen/logboek lezen+schrijven, eenheidsstatus
+│   ├── functions.php        inloggen, meldingen/logboek lezen+schrijven, eenheidsstatus, pushabonnementen
+│   ├── webpush.php           VAPID + payload-encryptie (RFC 8291/8292), geen externe library (fase M5)
 │   ├── header.php / footer.php
 ├── assets/style.css
 ├── login.php
 ├── logout.php
-├── index.php                 "Mijn meldingen" + eenheidsstatus-knoppen
+├── index.php                 "Mijn meldingen" + eenheidsstatus-knoppen + pushmeldingen-schakelaar
 ├── melding.php?id=           melddetail + logboek + foto's (lezen + toevoegen)
 ├── status.php                 POST-only: eenheidsstatus zetten
 ├── crew.php                   Crew + collega's, gecombineerde bellijst (fase M3)
+├── push_abonneren.php         POST-only (JSON): pushabonnement aan-/afmelden (fase M5)
+├── webhook_ontvangen.php      Publiek, token-beveiligd: ontvangt MKAPP's webhook, stuurt de pushmelding (fase M5)
+├── sw.js                      Service worker voor pushmeldingen (fase M5)
+├── genereer_vapid_sleutels.php  CLI: eenmalig een VAPID-sleutelpaar genereren (fase M5)
 ├── uploads/                   geuploade foto's (fase M4, niet in git -- via volume)
 ├── Dockerfile
 ├── docker-compose.yml

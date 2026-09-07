@@ -45,6 +45,122 @@ include __DIR__ . '/includes/header.php';
 </div>
 <?php endif; ?>
 
+<?php if (VAPID_PUBLIC_KEY !== ''): ?>
+<div class="panel push-panel" id="push-panel" hidden>
+    <h2>Pushmeldingen</h2>
+    <div class="push-row">
+        <div class="push-label">
+            Melding bij toewijzing
+            <span class="push-sub">Krijg een melding op dit apparaat zodra een melding aan jou (of je team) wordt toegewezen.</span>
+        </div>
+        <label class="toggle-switch">
+            <input type="checkbox" id="push-toggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+    <p class="push-melding" id="push-melding" hidden></p>
+</div>
+<script>
+(function () {
+    var paneel = document.getElementById('push-panel');
+    var toggle = document.getElementById('push-toggle');
+    var meldingEl = document.getElementById('push-melding');
+    var vapidPublicKey = <?= json_encode(VAPID_PUBLIC_KEY) ?>;
+    var abonneerUrl = '/push_abonneren.php';
+
+    function toonMelding(tekst, isFout) {
+        meldingEl.textContent = tekst;
+        meldingEl.classList.toggle('fout', !!isFout);
+        meldingEl.hidden = !tekst;
+    }
+
+    function base64UrlNaarUint8Array(base64Url) {
+        var padding = '='.repeat((4 - base64Url.length % 4) % 4);
+        var base64 = (base64Url + padding).replace(/-/g, '+').replace(/_/g, '/');
+        var ruw = window.atob(base64);
+        var output = new Uint8Array(ruw.length);
+        for (var i = 0; i < ruw.length; i++) {
+            output[i] = ruw.charCodeAt(i);
+        }
+        return output;
+    }
+
+    // Geen serviceworker/push-ondersteuning (of geen HTTPS) -- paneel
+    // blijft verborgen, de rest van MDT werkt hier gewoon zonder door.
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        return;
+    }
+
+    paneel.hidden = false;
+
+    navigator.serviceWorker.register('/sw.js').then(function (reg) {
+        return reg.pushManager.getSubscription();
+    }).then(function (sub) {
+        toggle.checked = !!sub;
+    }).catch(function () {
+        toonMelding('Kon de pushstatus niet ophalen op dit apparaat.', true);
+    });
+
+    toggle.addEventListener('change', function () {
+        toggle.disabled = true;
+        toonMelding('');
+
+        if (toggle.checked) {
+            navigator.serviceWorker.register('/sw.js').then(function (reg) {
+                return reg.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: base64UrlNaarUint8Array(vapidPublicKey),
+                });
+            }).then(function (sub) {
+                var json = sub.toJSON();
+                return fetch(abonneerUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        actie: 'abonneren',
+                        endpoint: json.endpoint,
+                        p256dh: json.keys.p256dh,
+                        auth: json.keys.auth,
+                        omschrijving: navigator.userAgent.slice(0, 100),
+                    }),
+                }).then(function (resp) {
+                    if (!resp.ok) { throw new Error('server'); }
+                });
+            }).catch(function (fout) {
+                toggle.checked = false;
+                if (fout && fout.name === 'NotAllowedError') {
+                    toonMelding('Toestemming voor meldingen geweigerd — zet dit aan bij de siteinstellingen van je browser om pushmeldingen te ontvangen.', true);
+                } else {
+                    toonMelding('Aanzetten van pushmeldingen is niet gelukt (werkt alleen via HTTPS).', true);
+                }
+            }).finally(function () {
+                toggle.disabled = false;
+            });
+        } else {
+            navigator.serviceWorker.register('/sw.js').then(function (reg) {
+                return reg.pushManager.getSubscription();
+            }).then(function (sub) {
+                if (!sub) { return; }
+                var endpoint = sub.endpoint;
+                return sub.unsubscribe().then(function () {
+                    return fetch(abonneerUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ actie: 'opzeggen', endpoint: endpoint }),
+                    });
+                });
+            }).catch(function () {
+                toonMelding('Uitzetten is niet helemaal gelukt — probeer het nog eens.', true);
+                toggle.checked = true;
+            }).finally(function () {
+                toggle.disabled = false;
+            });
+        }
+    });
+})();
+</script>
+<?php endif; ?>
+
 <div class="page-head">
     <h1>Mijn meldingen</h1>
     <p>

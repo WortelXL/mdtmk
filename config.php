@@ -34,7 +34,7 @@ define('DB_CHARSET', env_of('DB_CHARSET', 'utf8mb4'));
 // ---- App -------------------------------------------------------------
 // Versienummer, apart bijgehouden van de MKAPP-fasering (M1 t/m M5) —
 // zie CHANGELOG.md voor wat er per versie is toegevoegd/gewijzigd.
-define('APP_VERSION', env_of('APP_VERSION', 'V0.0.7'));
+define('APP_VERSION', env_of('APP_VERSION', 'V0.0.8'));
 
 // Het publieke basis-adres waarop MDT zelf bereikbaar is (fase M4) —
 // nodig om een volledige foto-URL te kunnen opslaan in de gedeelde
@@ -42,6 +42,30 @@ define('APP_VERSION', env_of('APP_VERSION', 'V0.0.7'));
 // aan zodra MDT een eigen domein/poort heeft; lokaal is de standaard
 // (poort 8081) prima voor testen.
 define('APP_BASE_URL', rtrim(env_of('APP_BASE_URL', 'http://localhost:8081'), '/'));
+
+// ---- Web Push (fase M5, zonder externe library) -------------------------
+// Voor pushmeldingen bij een toewijzing (zie includes/webpush.php). Een
+// VAPID-sleutelpaar identificeert MDT bij de pushdienst van de browser
+// (Chrome/Firefox/etc.) -- genereer 1x met genereer_vapid_sleutels.php en
+// zet de 2 waarden hieronder als omgevingsvariabelen. Zonder een
+// ingevulde public/private key blijft het pushmeldingen-paneel gewoon
+// verborgen (rest van MDT werkt onveranderd door).
+define('VAPID_PUBLIC_KEY', env_of('VAPID_PUBLIC_KEY', ''));
+// De private key is een PEM (meerdere regels) -- in een .env/omgevings-
+// variabele staat die met letterlijke '\n' in plaats van echte
+// regeleindes; dat wordt hier teruggezet naar een normale PEM-string.
+define('VAPID_PRIVATE_KEY', str_replace('\\n', "\n", env_of('VAPID_PRIVATE_KEY', '')));
+// mailto-adres waarop een pushdienst bij misbruik contact kan opnemen —
+// verplicht onderdeel van het VAPID-JWT, mag een fictief/algemeen adres
+// zijn.
+define('VAPID_SUBJECT', env_of('VAPID_SUBJECT', 'mailto:beheer@voorbeeld.nl'));
+
+// Deelbaar geheim waarmee webhook_ontvangen.php de aanroep van MKAPP's
+// webhook herkent (via ?token=... in de webhook-URL die je in MKAPP bij
+// Beheer > Connectiviteit instelt) -- zonder dit zou elke willekeurige
+// bezoeker een "melding toegewezen"-pushmelding kunnen laten versturen.
+// Zet dit op eenzelfde, lang en willekeurig token aan beide kanten.
+define('WEBHOOK_TOKEN', env_of('WEBHOOK_TOKEN', ''));
 
 // ---- Overig ------------------------------------------------------------
 date_default_timezone_set(env_of('APP_TIMEZONE', 'Europe/Amsterdam'));
