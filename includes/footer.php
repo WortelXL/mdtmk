@@ -17,6 +17,50 @@
             btn.textContent = 'Bezig...';
         }
     }, true);
+
+    // Auto-refresh: ververst de pagina periodiek zodat een wijziging van
+    // een ander (nieuwe toewijzing, logboekregel, statuswijziging, foto)
+    // vanzelf zichtbaar wordt zonder handmatig te hoeven verversen. Alleen
+    // actief op pagina's die dit aanzetten via data-auto-refresh="<sec>"
+    // op <body> (zie includes/header.php). Ververst nooit terwijl je iets
+    // aan het invullen bent (tekstveld met inhoud, focus in een veld,
+    // klaargezette foto's die nog niet verstuurd zijn, of een formulier
+    // dat nog aan het versturen is) of terwijl het tabblad niet zichtbaar
+    // is -- dat zou half ingevulde invoer kunnen kwijtraken.
+    (function () {
+        var seconden = parseInt(document.body.dataset.autoRefresh || '0', 10);
+        if (!seconden) {
+            return;
+        }
+
+        function magVerversen() {
+            if (document.hidden) {
+                return false;
+            }
+            var actief = document.activeElement;
+            if (actief && (actief.tagName === 'TEXTAREA' || actief.tagName === 'INPUT')) {
+                return false;
+            }
+            var notitie = document.querySelector('textarea[name="notitie"]');
+            if (notitie && notitie.value.trim() !== '') {
+                return false;
+            }
+            var fotoPreview = document.getElementById('foto-preview');
+            if (fotoPreview && fotoPreview.children.length > 0) {
+                return false;
+            }
+            if (document.querySelector('button[type="submit"]:disabled')) {
+                return false;
+            }
+            return true;
+        }
+
+        setInterval(function () {
+            if (magVerversen()) {
+                location.reload();
+            }
+        }, seconden * 1000);
+    })();
     </script>
 </body>
 </html>

@@ -6,7 +6,7 @@
     <title><?= isset($paginatitel) ? e($paginatitel) . ' — MDT' : 'MDT' ?></title>
     <link rel="stylesheet" href="/assets/style.css">
 </head>
-<body>
+<body<?= isset($auto_refresh_seconden) ? ' data-auto-refresh="' . (int) $auto_refresh_seconden . '"' : '' ?>>
     <div class="topbar">
         <a href="/index.php" class="brand"><span class="dot"></span> MDT</a>
         <div class="who">

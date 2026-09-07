@@ -18,6 +18,7 @@ $mijn_statussen = alle_eenheidsstatussen($pdo, $instellingen['rol_id'] ? (int) $
 
 $actief_nav = 'meldingen';
 $paginatitel = 'Mijn meldingen';
+$auto_refresh_seconden = 30;
 include __DIR__ . '/includes/header.php';
 ?>
 

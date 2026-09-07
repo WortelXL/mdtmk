@@ -1,5 +1,18 @@
 # Changelog — MDT
 
+## V0.0.9 (7-09-2026)
+
+- Auto-refresh: "Mijn meldingen" en een melddetailscherm verversen
+  voortaan vanzelf elke 30 seconden, zodat een wijziging van iemand
+  anders (nieuwe toewijzing, logboekregel, statuswijziging, foto)
+  zichtbaar wordt zonder dat je zelf op ververs hoeft te tikken. Pauzeert
+  automatisch zodra je iets aan het invullen bent -- een logboekregel
+  aan het typen bent, een tekstveld focus heeft, foto's hebt klaargezet
+  die nog niet verstuurd zijn, of een formulier nog aan het versturen
+  is -- of terwijl het tabblad niet zichtbaar is, zodat je nooit
+  halverwege ingevulde invoer kwijtraakt. Het "Niet gevonden"-scherm van
+  een melding ververst niet mee.
+
 ## V0.0.8 (7-09-2026)
 
 - Pushmeldingen bij toewijzing: zet je op "Mijn meldingen" een schakelaar

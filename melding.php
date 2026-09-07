@@ -75,6 +75,7 @@ $bijlagen = melding_bijlagen($pdo, $melding['id']);
 
 $actief_nav = 'meldingen';
 $paginatitel = $melding['meld_id'];
+$auto_refresh_seconden = 30;
 include __DIR__ . '/includes/header.php';
 ?>
 
