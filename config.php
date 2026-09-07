@@ -34,14 +34,7 @@ define('DB_CHARSET', env_of('DB_CHARSET', 'utf8mb4'));
 // ---- App -------------------------------------------------------------
 // Versienummer, apart bijgehouden van de MKAPP-fasering (M1 t/m M5) —
 // zie CHANGELOG.md voor wat er per versie is toegevoegd/gewijzigd.
-define('APP_VERSION', env_of('APP_VERSION', 'V0.0.9'));
-
-// Het publieke basis-adres waarop MDT zelf bereikbaar is (fase M4) —
-// nodig om een volledige foto-URL te kunnen opslaan in de gedeelde
-// database, zodat MKAPP de foto rechtstreeks bij MDT kan tonen. Pas dit
-// aan zodra MDT een eigen domein/poort heeft; lokaal is de standaard
-// (poort 8081) prima voor testen.
-define('APP_BASE_URL', rtrim(env_of('APP_BASE_URL', 'http://localhost:8081'), '/'));
+define('APP_VERSION', env_of('APP_VERSION', 'V0.0.10'));
 
 // ---- Web Push (fase M5, zonder externe library) -------------------------
 // Voor pushmeldingen bij een toewijzing (zie includes/webpush.php). Een

@@ -1,5 +1,20 @@
 # Changelog — MDT
 
+## V0.0.10 (7-09-2026)
+
+- Foto's uploaden/delen (fase M4) is op verzoek weer volledig
+  verwijderd -- werd als niet-toegevoegde-waarde beoordeeld. Het "Foto
+  toevoegen"-formulier en de foto-grid op de melddetailpagina zijn weg,
+  net als de upload-/opslaglogica, de bijbehorende Docker-instellingen
+  (uploadlimieten teruggezet naar de waarden van vóór fase M4, de
+  aparte `/uploads`-map en het bijbehorende volume zijn vervallen) en
+  `APP_BASE_URL` (die alleen voor de foto-URL bestond). MKAPP toont
+  hierdoor ook geen "Foto's"-sectie meer op de melding-pagina; de
+  gedeelde tabel `melding_bijlagen` vervalt (zie MKAPP V2.0.2.14).
+  **Let op voor bestaande installaties**: `mdt_user`'s GRANT-rechten op
+  `melding_bijlagen` verdwijnen niet vanzelf bij het verwijderen van de
+  tabel -- zie README.md voor het REVOKE-commando.
+
 ## V0.0.9 (7-09-2026)
 
 - Auto-refresh: "Mijn meldingen" en een melddetailscherm verversen
