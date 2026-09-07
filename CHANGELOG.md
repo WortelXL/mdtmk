@@ -1,5 +1,28 @@
 # Changelog — MDT
 
+## V0.0.7 (7-09-2026)
+
+- Telefoonvriendelijker gemaakt op de bestaande schermen:
+  - Foto's kiezen heeft nu een echte, grote kies-knop met miniatuur-
+    voorbeelden van de gekozen foto's en een kruisje om er 1 weer weg
+    te halen vóór het versturen -- in plaats van de kale, nauwelijks
+    aan te tikken "Choose Files"-knop van de browser zelf. Je kunt ook
+    meerdere keren achter elkaar kiezen (bv. na elke camera-opname),
+    ze stapelen op.
+  - Zijn de gekozen foto's samen te groot om te versturen, dan zie je
+    nu een duidelijke foutmelding in plaats van dat er stilzwijgend
+    niets gebeurt.
+  - De upload-limiet in Docker is verhoogd (10MB -> 25MB per foto,
+    100MB totaal per keer) -- een moderne telefooncamera maakt al snel
+    grotere foto's dan de oude limiet toeliet.
+  - Een submit-knop wordt na de eerste tik uitgeschakeld ("Bezig..."),
+    zodat een 2e tik op een wisselende verbinding niet nog een keer
+    hetzelfde formulier verstuurt.
+  - Kleinere aanraakgebieden (zoals de Crew/Meldingen-tabbladen) zijn
+    vergroot naar minimaal 44px.
+  - Pinch-to-zoom staat weer aan (was uitgeschakeld via de
+    viewport-instelling).
+
 ## V0.0.6 (5-09-2026)
 
 - Foto's toevoegen bij een melding (fase M4) — vanaf de melddetailpagina,
