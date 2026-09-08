@@ -96,6 +96,7 @@ GRANT SELECT ON mkapp.mdt_gebruikers TO 'mdt_user'@'%';
 GRANT SELECT ON mkapp.rollen TO 'mdt_user'@'%';
 GRANT SELECT ON mkapp.crew TO 'mdt_user'@'%';
 GRANT SELECT ON mkapp.push_abonnementen TO 'mdt_user'@'%';
+GRANT SELECT ON mkapp.melding_koppelingen TO 'mdt_user'@'%';
 
 -- Schrijven (fase M2: logboek terugschrijven + eenheidsstatus doorgeven;
 -- fase M5: pushabonnementen opslaan/verwijderen)

@@ -7,7 +7,10 @@
   elke regel heeft een klein 🔗 MK-xxxx-label als hij niet van de
   melding zelf komt, met een teller erboven. Zelfde aanpak als MKAPP
   V2.0.2.21. Vereist MKAPP V2.0.2.21 (gedeelde database, geen
-  schemawijziging nodig in MDT zelf).
+  schemawijziging nodig in MDT zelf), **en vereist een nieuwe GRANT
+  op productie**: `mdt_user` moet ook lezen mogen op
+  `mkapp.melding_koppelingen` (zie README.md) -- zonder deze GRANT
+  geeft de melding-pagina een fatale fout.
 
 ## V0.0.13 (8-09-2026)
 
