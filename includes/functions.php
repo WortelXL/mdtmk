@@ -223,20 +223,29 @@ function mijn_meldingen(PDO $pdo, int $gebruiker_id, bool $ook_afgerond = false,
         }
         // Geen gekoppelde rol (of geen classificatiekoppeling erop) = echt alles, geen extra filter.
     } else {
-        // V0.0.15: iemand kan lid zijn van meerdere teams tegelijk --
-        // toegewezen_aan_team_id moet dus in de hele lijst matchen, niet
+        // V0.0.16: mkapp kan een melding sinds V2.0.2.24 aan meerdere
+        // crew/MDT-gebruikers/teams tegelijk toewijzen via de nieuwe
+        // many-to-many-tabel `melding_toewijzingen` (gedeelde database) --
+        // dat is nu de bron van waarheid, niet meer de oude, onderling
+        // exclusieve toegewezen_aan_gebruiker_id/_team_id-kolommen (die
+        // bij een 2e toewijzing van hetzelfde type niet meer betrouwbaar
+        // zijn: mkapp vult ze nog maar best-effort met de laatst
+        // toegevoegde). Iemand kan bovendien lid zijn van meerdere teams
+        // tegelijk (V0.0.15) -- moet dus in de hele lijst matchen, niet
         // tegen 1 vast team_id. Geen enkel team = een lege IN-lijst, die
-        // matcht nooit iets (net als de oude team_id=0-truc).
+        // matcht nooit iets.
         $teams = mijn_teams($pdo, $gebruiker_id);
         $team_ids = array_column($teams, 'id');
-        $sql .= ' AND (m.toegewezen_aan_gebruiker_id = :gid';
+        $sql .= ' AND m.id IN (
+            SELECT melding_id FROM melding_toewijzingen
+            WHERE (type = "mdt" AND doel_id = :gid)';
         if ($team_ids) {
             $plekhouders = [];
             foreach ($team_ids as $i => $tid) {
                 $plekhouders[] = ':t' . $i;
                 $params['t' . $i] = $tid;
             }
-            $sql .= ' OR m.toegewezen_aan_team_id IN (' . implode(',', $plekhouders) . ')';
+            $sql .= ' OR (type = "team" AND doel_id IN (' . implode(',', $plekhouders) . '))';
         }
         $sql .= ')';
         $params['gid'] = $gebruiker_id;
@@ -270,7 +279,10 @@ function mijn_meldingen(PDO $pdo, int $gebruiker_id, bool $ook_afgerond = false,
  */
 function mijn_melding_ophalen(PDO $pdo, int $melding_id, int $gebruiker_id): ?array
 {
-    // V0.0.15: lid van meerdere teams tegelijk mogelijk, zie mijn_meldingen().
+    // V0.0.16: zie de toelichting bij mijn_meldingen() -- toewijzing komt
+    // nu uit `melding_toewijzingen`, niet meer uit de oude, onderling
+    // exclusieve kolommen. Lid van meerdere teams tegelijk blijft mogelijk
+    // (V0.0.15).
     $teams = mijn_teams($pdo, $gebruiker_id);
     $team_ids = array_column($teams, 'id');
     $instellingen = mdt_instellingen($pdo, $gebruiker_id);
@@ -279,7 +291,9 @@ function mijn_melding_ophalen(PDO $pdo, int $melding_id, int $gebruiker_id): ?ar
             FROM meldingen m
             LEFT JOIN hoofdclassificaties h ON h.id = m.hoofdclassificatie_id
             LEFT JOIN subclassificaties s ON s.id = m.subclassificatie_id
-            WHERE m.id = :id AND (m.toegewezen_aan_gebruiker_id = :gid";
+            WHERE m.id = :id AND (m.id IN (
+                SELECT melding_id FROM melding_toewijzingen
+                WHERE (type = \"mdt\" AND doel_id = :gid)";
     $params = ['id' => $melding_id, 'gid' => $gebruiker_id];
     if ($team_ids) {
         $plekhouders = [];
@@ -287,8 +301,9 @@ function mijn_melding_ophalen(PDO $pdo, int $melding_id, int $gebruiker_id): ?ar
             $plekhouders[] = ':t' . $i;
             $params['t' . $i] = $tid;
         }
-        $sql .= ' OR m.toegewezen_aan_team_id IN (' . implode(',', $plekhouders) . ')';
+        $sql .= ' OR (type = "team" AND doel_id IN (' . implode(',', $plekhouders) . '))';
     }
+    $sql .= ')';
 
     if ($instellingen['alle_meldingen']) {
         if ($instellingen['hoofdclassificatie_id']) {

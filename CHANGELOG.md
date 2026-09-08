@@ -1,5 +1,18 @@
 # Changelog — MDT
 
+## V0.0.16 (8-09-2026)
+
+- MKAPP kan een melding sinds V2.0.2.24 aan meerdere crew-contacten/MDT-
+  gebruikers/teams tegelijk toewijzen (i.p.v. hooguit 1). "Mijn
+  meldingen" en de melding-pagina in MDT herkennen dit nu correct --
+  een melding verschijnt zodra je er rechtstreeks aan toegewezen bent
+  óf via een team waar je lid van bent, ook als de melding daarnaast
+  nog aan anderen toegewezen is. Vereist MKAPP V2.0.2.24 (gedeelde
+  database, nieuwe tabel `melding_toewijzingen`) **en een nieuwe GRANT
+  op productie**: `mdt_user` moet ook lezen mogen op
+  `mkapp.melding_toewijzingen` (zie README.md) -- zonder deze GRANT
+  geeft de meldingenlijst een fatale fout.
+
 ## V0.0.15 (8-09-2026)
 
 - Een team kan nu meerdere collega's als lid hebben (was: hooguit 1) --
