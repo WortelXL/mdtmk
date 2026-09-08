@@ -1,9 +1,10 @@
 <?php
 /**
  * Ontvangt MKAPP's uitgaande webhook voor 'melding_toegewezen' en stuurt
- * op basis daarvan een pushmelding naar elk abonnement van de
+ * op basis daarvan een pushmelding naar elk abonnement van elke
  * toegewezen MDT-gebruiker (fase M5, zonder externe library — zie
- * includes/webpush.php).
+ * includes/webpush.php). Sinds V0.0.15 kan een team meerdere leden
+ * hebben — dan gaat de push naar alle leden van dat team.
  *
  * Publiek endpoint (geen login — MKAPP zelf is niet ingelogd op MDT),
  * daarom beveiligd met een los deelbaar token in de query-string. Stel
@@ -51,9 +52,19 @@ if (!is_array($body) || ($body['event'] ?? '') !== 'melding_toegewezen') {
 }
 
 $data = $body['data'] ?? [];
-$gebruiker_id = isset($data['gekoppelde_gebruiker_id']) ? (int) $data['gekoppelde_gebruiker_id'] : 0;
-if ($gebruiker_id <= 0) {
-    // Team zonder gekoppelde MDT-gebruiker -- niemand om te pushen.
+// V0.0.15: MKAPP V2.0.2.22 stuurt voortaan 'gekoppelde_gebruiker_ids'
+// (array, kan meerdere leden bevatten bij een team) -- val terug op het
+// oude enkelvoudige 'gekoppelde_gebruiker_id' als een oudere MKAPP-versie
+// dat nieuwe veld nog niet meestuurt.
+$gebruiker_ids = [];
+if (isset($data['gekoppelde_gebruiker_ids']) && is_array($data['gekoppelde_gebruiker_ids'])) {
+    $gebruiker_ids = array_values(array_unique(array_map('intval', $data['gekoppelde_gebruiker_ids'])));
+} elseif (isset($data['gekoppelde_gebruiker_id']) && (int) $data['gekoppelde_gebruiker_id'] > 0) {
+    $gebruiker_ids = [(int) $data['gekoppelde_gebruiker_id']];
+}
+$gebruiker_ids = array_filter($gebruiker_ids, fn($id) => $id > 0);
+if (!$gebruiker_ids) {
+    // Team zonder leden -- niemand om te pushen.
     http_response_code(200);
     echo json_encode(['ok' => true, 'genegeerd' => true]);
     exit;
@@ -70,26 +81,30 @@ $payload = [
     'url'   => '/melding.php?id=' . (int) ($data['id'] ?? 0),
 ];
 
-$abonnementen = push_abonnementen_voor_gebruiker($pdo, $gebruiker_id);
 $verstuurd = 0;
-foreach ($abonnementen as $abonnement) {
-    $resultaat = webpush_versturen(
-        $abonnement['endpoint'],
-        $abonnement['p256dh'],
-        $abonnement['auth'],
-        $payload,
-        VAPID_PRIVATE_KEY,
-        VAPID_PUBLIC_KEY,
-        VAPID_SUBJECT
-    );
-    if ($resultaat['ok']) {
-        $verstuurd++;
-    } elseif (in_array($resultaat['http_status'], [404, 410], true)) {
-        // Pushdienst zegt: dit abonnement bestaat niet meer (browserdata
-        // gewist, uitgeschreven bij de pushdienst, enz.) -- opruimen.
-        push_abonnement_verwijderen_op_id($pdo, (int) $abonnement['id']);
+$abonnementen_totaal = 0;
+foreach ($gebruiker_ids as $gebruiker_id) {
+    $abonnementen = push_abonnementen_voor_gebruiker($pdo, $gebruiker_id);
+    $abonnementen_totaal += count($abonnementen);
+    foreach ($abonnementen as $abonnement) {
+        $resultaat = webpush_versturen(
+            $abonnement['endpoint'],
+            $abonnement['p256dh'],
+            $abonnement['auth'],
+            $payload,
+            VAPID_PRIVATE_KEY,
+            VAPID_PUBLIC_KEY,
+            VAPID_SUBJECT
+        );
+        if ($resultaat['ok']) {
+            $verstuurd++;
+        } elseif (in_array($resultaat['http_status'], [404, 410], true)) {
+            // Pushdienst zegt: dit abonnement bestaat niet meer (browserdata
+            // gewist, uitgeschreven bij de pushdienst, enz.) -- opruimen.
+            push_abonnement_verwijderen_op_id($pdo, (int) $abonnement['id']);
+        }
     }
 }
 
 http_response_code(200);
-echo json_encode(['ok' => true, 'verstuurd' => $verstuurd, 'abonnementen' => count($abonnementen)]);
+echo json_encode(['ok' => true, 'verstuurd' => $verstuurd, 'abonnementen' => $abonnementen_totaal]);

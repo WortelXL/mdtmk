@@ -11,7 +11,10 @@ $weergave = ($_GET['weergave'] ?? '') === 'alle' && $instellingen['alle_meldinge
 
 $meldingen = mijn_meldingen($pdo, huidige_gebruiker_id(), false, $weergave);
 $mijn_status = huidige_eenheidsstatus($pdo, huidige_gebruiker_id());
-$mijn_team = mijn_team($pdo, huidige_gebruiker_id());
+// V0.0.15: lid van meerdere teams tegelijk mogelijk -- $mijn_teams_namen
+// is de kommagescheiden weergavetekst, hierboven werkte dit nog met 1 team.
+$mijn_teams = mijn_teams($pdo, huidige_gebruiker_id());
+$mijn_teams_namen = implode(', ', array_column($mijn_teams, 'naam'));
 // Sinds fase M7: statussen horen bij een rol -- zonder gekoppelde rol
 // (mdt_instellingen['rol_id']) levert dit altijd een lege lijst op.
 $mijn_statussen = alle_eenheidsstatussen($pdo, $instellingen['rol_id'] ? (int) $instellingen['rol_id'] : null);
@@ -26,7 +29,7 @@ include __DIR__ . '/includes/header.php';
 <div class="panel status-panel">
     <input type="checkbox" id="status-toggle" class="status-toggle-checkbox">
     <label for="status-toggle" class="status-toggle-wrap">
-        <h2>Mijn status<?= $mijn_team ? ' · ' . e($mijn_team['naam']) : '' ?></h2>
+        <h2>Mijn status<?= $mijn_teams_namen !== '' ? ' · ' . e($mijn_teams_namen) : '' ?></h2>
         <span class="status-toggle-chevron">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
         </span>
@@ -180,7 +183,7 @@ include __DIR__ . '/includes/header.php';
         <?php if ($weergave === 'alle'): ?>
             Alle meldingen<?= $instellingen['hoofdclassificatie_id'] ? ' binnen jouw classificatie' : '' ?>.
         <?php else: ?>
-            Actieve meldingen die aan jou zijn toegewezen<?= $mijn_team ? ' (rechtstreeks of via team ' . e($mijn_team['naam']) . ')' : '' ?>.
+            Actieve meldingen die aan jou zijn toegewezen<?= $mijn_teams_namen !== '' ? ' (rechtstreeks of via team ' . e($mijn_teams_namen) . ')' : '' ?>.
         <?php endif; ?>
     </p>
     <?php if ($instellingen['alle_meldingen']): ?>

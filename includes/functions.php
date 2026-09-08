@@ -166,17 +166,20 @@ function prioriteit_class(string $prioriteit): string
 // ---- Team (fase M2) ---------------------------------------------------
 
 /**
- * Het team dat op dit moment aan de gebruiker gekoppeld is (een team
- * heeft altijd hoogstens 1 gekoppelde gebruiker tegelijk), of null als
- * er geen team aan dit account hangt. Gebruikt om ook team-toegewezen
- * meldingen mee te tellen (naast rechtstreekse individuele toewijzing).
+ * Alle teams waar de gebruiker op dit moment lid van is (V0.0.15 --
+ * iemand mag lid zijn van meerdere teams tegelijk, via de gedeelde
+ * tabel `team_leden`; MKAPP V2.0.2.22). Lege array = geen enkel team.
+ * Gebruikt om ook team-toegewezen meldingen mee te tellen (naast
+ * rechtstreekse individuele toewijzing).
  */
-function mijn_team(PDO $pdo, int $gebruiker_id): ?array
+function mijn_teams(PDO $pdo, int $gebruiker_id): array
 {
-    $stmt = $pdo->prepare('SELECT * FROM teams WHERE gekoppelde_gebruiker_id = :gid LIMIT 1');
+    $stmt = $pdo->prepare(
+        'SELECT t.* FROM team_leden tl JOIN teams t ON t.id = tl.team_id
+         WHERE tl.gebruiker_id = :gid ORDER BY t.naam ASC'
+    );
     $stmt->execute(['gid' => $gebruiker_id]);
-    $team = $stmt->fetch();
-    return $team ?: null;
+    return $stmt->fetchAll();
 }
 
 // ---- Meldingen ----------------------------------------------------------
@@ -220,11 +223,23 @@ function mijn_meldingen(PDO $pdo, int $gebruiker_id, bool $ook_afgerond = false,
         }
         // Geen gekoppelde rol (of geen classificatiekoppeling erop) = echt alles, geen extra filter.
     } else {
-        $team = mijn_team($pdo, $gebruiker_id);
-        $team_id = $team['id'] ?? 0; // 0 matcht nooit een echte team_id, ook niet als toegewezen_aan_team_id NULL is
-        $sql .= ' AND (m.toegewezen_aan_gebruiker_id = :gid OR m.toegewezen_aan_team_id = :team_id)';
+        // V0.0.15: iemand kan lid zijn van meerdere teams tegelijk --
+        // toegewezen_aan_team_id moet dus in de hele lijst matchen, niet
+        // tegen 1 vast team_id. Geen enkel team = een lege IN-lijst, die
+        // matcht nooit iets (net als de oude team_id=0-truc).
+        $teams = mijn_teams($pdo, $gebruiker_id);
+        $team_ids = array_column($teams, 'id');
+        $sql .= ' AND (m.toegewezen_aan_gebruiker_id = :gid';
+        if ($team_ids) {
+            $plekhouders = [];
+            foreach ($team_ids as $i => $tid) {
+                $plekhouders[] = ':t' . $i;
+                $params['t' . $i] = $tid;
+            }
+            $sql .= ' OR m.toegewezen_aan_team_id IN (' . implode(',', $plekhouders) . ')';
+        }
+        $sql .= ')';
         $params['gid'] = $gebruiker_id;
-        $params['team_id'] = $team_id;
     }
 
     if (!$ook_afgerond && $actieve_sleutels) {
@@ -255,16 +270,25 @@ function mijn_meldingen(PDO $pdo, int $gebruiker_id, bool $ook_afgerond = false,
  */
 function mijn_melding_ophalen(PDO $pdo, int $melding_id, int $gebruiker_id): ?array
 {
-    $team = mijn_team($pdo, $gebruiker_id);
-    $team_id = $team['id'] ?? 0;
+    // V0.0.15: lid van meerdere teams tegelijk mogelijk, zie mijn_meldingen().
+    $teams = mijn_teams($pdo, $gebruiker_id);
+    $team_ids = array_column($teams, 'id');
     $instellingen = mdt_instellingen($pdo, $gebruiker_id);
 
     $sql = "SELECT m.*, h.naam AS hoofd_naam, h.kleur AS hoofd_kleur, s.naam AS sub_naam
             FROM meldingen m
             LEFT JOIN hoofdclassificaties h ON h.id = m.hoofdclassificatie_id
             LEFT JOIN subclassificaties s ON s.id = m.subclassificatie_id
-            WHERE m.id = :id AND (m.toegewezen_aan_gebruiker_id = :gid OR m.toegewezen_aan_team_id = :team_id";
-    $params = ['id' => $melding_id, 'gid' => $gebruiker_id, 'team_id' => $team_id];
+            WHERE m.id = :id AND (m.toegewezen_aan_gebruiker_id = :gid";
+    $params = ['id' => $melding_id, 'gid' => $gebruiker_id];
+    if ($team_ids) {
+        $plekhouders = [];
+        foreach ($team_ids as $i => $tid) {
+            $plekhouders[] = ':t' . $i;
+            $params['t' . $i] = $tid;
+        }
+        $sql .= ' OR m.toegewezen_aan_team_id IN (' . implode(',', $plekhouders) . ')';
+    }
 
     if ($instellingen['alle_meldingen']) {
         if ($instellingen['hoofdclassificatie_id']) {

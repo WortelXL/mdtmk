@@ -1,5 +1,15 @@
 # Changelog — MDT
 
+## V0.0.15 (8-09-2026)
+
+- Een team kan nu meerdere collega's als lid hebben (was: hooguit 1) --
+  je ziet nu de status van elk teamlid apart, en iedereen in het team
+  krijgt een pushmelding bij een nieuwe toewijzing. Je kunt ook zelf
+  lid zijn van meerdere teams tegelijk. Vereist MKAPP V2.0.2.22
+  (gedeelde database, nieuwe tabel `team_leden`) **en een nieuwe GRANT
+  op productie**: `mdt_user` moet ook lezen mogen op
+  `mkapp.team_leden` (zie README.md).
+
 ## V0.0.14 (8-09-2026)
 
 - Het kladblok op de melding-pagina toont nu ook de regels van
