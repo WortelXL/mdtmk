@@ -1,5 +1,12 @@
 # Changelog — MDT
 
+## V0.0.13 (8-09-2026)
+
+- "Mijn status" op de meldingenlijst verschijnt nu alleen nog als er
+  ook echt een rol aan je gekoppeld is (dus als je statusrechten hebt).
+  Geen rol gekoppeld? Dan is het hele blok weg, in plaats van dat het
+  een "vraag een beheerder"-melding toonde.
+
 ## V0.0.12 (8-09-2026)
 
 - De Crew-pagina (bellijst) toont nu alleen nog wie op Beheer > Crew

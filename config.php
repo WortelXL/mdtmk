@@ -34,7 +34,7 @@ define('DB_CHARSET', env_of('DB_CHARSET', 'utf8mb4'));
 // ---- App -------------------------------------------------------------
 // Versienummer, apart bijgehouden van de MKAPP-fasering (M1 t/m M5) —
 // zie CHANGELOG.md voor wat er per versie is toegevoegd/gewijzigd.
-define('APP_VERSION', env_of('APP_VERSION', 'V0.0.12'));
+define('APP_VERSION', env_of('APP_VERSION', 'V0.0.13'));
 
 // ---- Web Push (fase M5, zonder externe library) -------------------------
 // Voor pushmeldingen bij een toewijzing (zie includes/webpush.php). Een

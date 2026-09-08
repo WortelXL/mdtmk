@@ -22,7 +22,7 @@ $auto_refresh_seconden = 30;
 include __DIR__ . '/includes/header.php';
 ?>
 
-<?php if ($instellingen['toon_status_overzicht']): ?>
+<?php if ($instellingen['toon_status_overzicht'] && $instellingen['rol_id']): ?>
 <div class="panel status-panel">
     <input type="checkbox" id="status-toggle" class="status-toggle-checkbox">
     <label for="status-toggle" class="status-toggle-wrap">
@@ -53,11 +53,7 @@ include __DIR__ . '/includes/header.php';
         <?php endforeach; ?>
     </div>
     <?php if (!$mijn_statussen): ?>
-        <p class="log-leeg">
-            <?= $instellingen['rol_id']
-                ? 'Nog geen eenheidsstatussen ingesteld voor jouw rol (Beheer &gt; Eenheidsstatussen in MKAPP).'
-                : 'Je hebt nog geen rol gekoppeld — vraag een beheerder om dit in te stellen bij Beheer &gt; MDT-gebruikers in MKAPP, dan verschijnen hier je statusknoppen.' ?>
-        </p>
+        <p class="log-leeg">Nog geen eenheidsstatussen ingesteld voor jouw rol (Beheer &gt; Eenheidsstatussen in MKAPP).</p>
     <?php endif; ?>
 </div>
 <?php endif; ?>
