@@ -291,6 +291,111 @@ function melding_logboek(PDO $pdo, int $melding_id): array
 }
 
 /**
+ * Alle meldingen die (direct of indirect, transitief) aan elkaar
+ * gekoppeld zijn, per gevraagde melding_id -- overgenomen uit mkapp
+ * includes/functions.php (V2.0.2.21), zelfde tabel `melding_koppelingen`,
+ * gedeelde database. BFS over alle koppelingen.
+ *
+ * @param array<int> $melding_ids
+ * @return array<int, array<int>> geïndexeerd op melding_id -- de eigen
+ *   id zit altijd in de eigen keten (ook zonder koppelingen).
+ */
+function melding_koppel_ketens(PDO $pdo, array $melding_ids): array
+{
+    $melding_ids = array_values(array_unique(array_map('intval', $melding_ids)));
+    if (!$melding_ids) {
+        return [];
+    }
+
+    $adjacency = [];
+    foreach ($pdo->query('SELECT melding_id, gekoppelde_melding_id FROM melding_koppelingen')->fetchAll() as $rij) {
+        $a = (int) $rij['melding_id'];
+        $b = (int) $rij['gekoppelde_melding_id'];
+        $adjacency[$a][] = $b;
+        $adjacency[$b][] = $a;
+    }
+
+    $resultaat = [];
+    foreach ($melding_ids as $start) {
+        $keten = [$start => true];
+        $wachtrij = [$start];
+        while ($wachtrij) {
+            $huidige = array_shift($wachtrij);
+            foreach ($adjacency[$huidige] ?? [] as $buur) {
+                if (!isset($keten[$buur])) {
+                    $keten[$buur] = true;
+                    $wachtrij[] = $buur;
+                }
+            }
+        }
+        $resultaat[$start] = array_keys($keten);
+    }
+    return $resultaat;
+}
+
+/**
+ * Samengevoegd kladblok (V0.0.14, zelfde aanpak als mkapp V2.0.2.21):
+ * voor elke gevraagde melding_id, alle melding_notities van de hele
+ * koppelketen (zichzelf + alle direct/indirect gekoppelde meldingen),
+ * chronologisch oplopend. Elke regel krijgt bron_meld_id/bron_titel mee
+ * (welke melding hem geschreven heeft) en is_eigen (of dat de gevraagde
+ * melding zelf is) -- zo blijft zichtbaar welke info uit welke melding
+ * komt. Gebruikt op melding.php.
+ *
+ * @param array<int> $melding_ids
+ * @return array<int, array<int, array>> geïndexeerd op melding_id
+ */
+function melding_notities_samengevoegd(PDO $pdo, array $melding_ids): array
+{
+    $ketens = melding_koppel_ketens($pdo, $melding_ids);
+    if (!$ketens) {
+        return [];
+    }
+
+    $alle_betrokken_ids = [];
+    foreach ($ketens as $keten) {
+        foreach ($keten as $bid) {
+            $alle_betrokken_ids[$bid] = true;
+        }
+    }
+    $alle_betrokken_ids = array_keys($alle_betrokken_ids);
+    $plekhouders = implode(',', array_fill(0, count($alle_betrokken_ids), '?'));
+
+    $meta = [];
+    $stmt = $pdo->prepare("SELECT id, meld_id, titel FROM meldingen WHERE id IN ($plekhouders)");
+    $stmt->execute($alle_betrokken_ids);
+    foreach ($stmt->fetchAll() as $rij) {
+        $meta[(int) $rij['id']] = $rij;
+    }
+
+    $stmt = $pdo->prepare("SELECT * FROM melding_notities WHERE melding_id IN ($plekhouders) ORDER BY aangemaakt_op ASC, id ASC");
+    $stmt->execute($alle_betrokken_ids);
+    $per_bron = [];
+    foreach ($stmt->fetchAll() as $rij) {
+        $per_bron[(int) $rij['melding_id']][] = $rij;
+    }
+
+    $resultaat = [];
+    foreach ($ketens as $melding_id => $keten) {
+        $regels = [];
+        foreach ($keten as $bron_id) {
+            foreach ($per_bron[$bron_id] ?? [] as $rij) {
+                $rij['bron_meld_id'] = $meta[$bron_id]['meld_id'] ?? '?';
+                $rij['bron_titel']   = $meta[$bron_id]['titel'] ?? '';
+                $rij['is_eigen']     = ($bron_id === $melding_id);
+                $regels[] = $rij;
+            }
+        }
+        usort($regels, function ($a, $b) {
+            $c = strcmp($a['aangemaakt_op'], $b['aangemaakt_op']);
+            return $c !== 0 ? $c : ((int) $a['id'] <=> (int) $b['id']);
+        });
+        $resultaat[$melding_id] = $regels;
+    }
+    return $resultaat;
+}
+
+/**
  * Voegt een vrije-tekst logboekregel toe aan een melding (fase M2) —
  * schrijft rechtstreeks in de bestaande `melding_notities`-tabel, exact
  * hetzelfde logboek dat MKAPP op de melding-pagina toont, met

@@ -30,7 +30,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['actie'] ?? '') === 'logboe
     exit;
 }
 
-$logboek = melding_logboek($pdo, $melding['id']);
+// V0.0.14: kladblok samengevoegd over de hele koppelketen (ook indirecte
+// koppelingen), zelfde aanpak als mkapp V2.0.2.21 -- elke regel weet welke
+// melding 'm oorspronkelijk geschreven heeft (bron_meld_id/is_eigen), zie
+// melding_notities_samengevoegd() in functions.php.
+$logboek = melding_notities_samengevoegd($pdo, [$melding['id']])[$melding['id']] ?? [];
+$logboek = array_reverse($logboek);
+$aantal_gekoppelde_regels = count(array_filter($logboek, fn($n) => !$n['is_eigen']));
 
 $actief_nav = 'meldingen';
 $paginatitel = $melding['meld_id'];
@@ -78,12 +84,20 @@ include __DIR__ . '/includes/header.php';
 
 <div class="panel">
     <h2>Kladblok</h2>
+    <?php if ($aantal_gekoppelde_regels > 0): ?>
+        <p style="color:var(--muted); font-size:12px; margin:-6px 0 12px;">Inclusief <?= $aantal_gekoppelde_regels ?> regel<?= $aantal_gekoppelde_regels === 1 ? '' : 's' ?> uit gekoppelde meldingen (🔗).</p>
+    <?php endif; ?>
     <?php if (!$logboek): ?>
         <p class="log-leeg">Nog geen kladblokregels.</p>
     <?php endif; ?>
     <?php foreach ($logboek as $regel): ?>
         <div class="log-entry">
-            <div class="kop"><?= (new DateTime($regel['aangemaakt_op']))->format('d-m-Y H:i') ?> · <?= e($regel['auteur'] ?: 'onbekend') ?></div>
+            <div class="kop">
+                <?php if (!$regel['is_eigen']): ?>
+                    <a href="/melding.php?id=<?= (int) $regel['melding_id'] ?>" style="color:var(--amber); text-decoration:none; font-weight:600;" title="Regel van gekoppelde melding <?= e($regel['bron_meld_id']) ?> — <?= e($regel['bron_titel']) ?>">🔗 <?= e($regel['bron_meld_id']) ?></a> ·
+                <?php endif; ?>
+                <?= (new DateTime($regel['aangemaakt_op']))->format('d-m-Y H:i') ?> · <?= e($regel['auteur'] ?: 'onbekend') ?>
+            </div>
             <div class="tekst"><?= nl2br(e($regel['notitie'])) ?></div>
         </div>
     <?php endforeach; ?>

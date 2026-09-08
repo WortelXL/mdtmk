@@ -1,5 +1,14 @@
 # Changelog — MDT
 
+## V0.0.14 (8-09-2026)
+
+- Het kladblok op de melding-pagina toont nu ook de regels van
+  gekoppelde meldingen (ook indirect, via een keten van koppelingen) --
+  elke regel heeft een klein 🔗 MK-xxxx-label als hij niet van de
+  melding zelf komt, met een teller erboven. Zelfde aanpak als MKAPP
+  V2.0.2.21. Vereist MKAPP V2.0.2.21 (gedeelde database, geen
+  schemawijziging nodig in MDT zelf).
+
 ## V0.0.13 (8-09-2026)
 
 - "Mijn status" op de meldingenlijst verschijnt nu alleen nog als er
