@@ -1,5 +1,13 @@
 # Changelog — MDT
 
+## V0.0.12 (8-09-2026)
+
+- De Crew-pagina (bellijst) toont nu alleen nog wie op Beheer > Crew
+  (in MKAPP) als "Zichtbaar in MDT" staat aangevinkt -- zo houdt de
+  centralist deze lijst overzichtelijk zonder iemand te hoeven
+  verwijderen of deactiveren. Staat standaard aan voor iedereen die er
+  al stond, dus er verandert niets vanzelf. Vereist MKAPP V2.0.2.20.
+
 ## V0.0.11 (8-09-2026)
 
 - "Mijn status" op de meldingenlijst is nu in-/uitklapbaar. Standaard

@@ -399,16 +399,23 @@ function zet_eenheidsstatus(PDO $pdo, int $gebruiker_id, int $eenheidsstatus_id,
  * lijstjes hoeft te kiezen om iemand te bellen. Iemand zonder
  * telefoonnummer staat er gewoon bij (herkenbaar aan het ontbreken van
  * een belknop) in plaats van stilzwijgend te verdwijnen.
+ *
+ * V0.0.12: alleen wie op Beheer > Crew (in MKAPP) als "Zichtbaar in
+ * MDT" staat aangevinkt komt hier nog in -- zo houdt de centralist
+ * deze lijst schoon zonder iemand te hoeven verwijderen of
+ * deactiveren. Vereist MKAPP V2.0.2.20 (kolom `zichtbaar_in_mdt` op
+ * `crew`/`mdt_gebruikers`).
  */
 function crew_en_collegas(PDO $pdo): array
 {
     return $pdo->query(
         "SELECT naam, functie, telefoonnummer, 'crew' AS type FROM crew
+         WHERE zichtbaar_in_mdt = 1
          UNION ALL
          SELECT g.naam, g.functie, m.telefoonnummer, 'collega' AS type
          FROM mdt_gebruikers m
          JOIN gebruikers g ON g.id = m.gebruiker_id
-         WHERE m.actief = 1 AND g.actief = 1
+         WHERE m.actief = 1 AND g.actief = 1 AND m.zichtbaar_in_mdt = 1
          ORDER BY naam ASC"
     )->fetchAll();
 }
