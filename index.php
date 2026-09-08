@@ -24,7 +24,23 @@ include __DIR__ . '/includes/header.php';
 
 <?php if ($instellingen['toon_status_overzicht']): ?>
 <div class="panel status-panel">
-    <h2>Mijn status<?= $mijn_team ? ' · ' . e($mijn_team['naam']) : '' ?></h2>
+    <input type="checkbox" id="status-toggle" class="status-toggle-checkbox">
+    <label for="status-toggle" class="status-toggle-wrap">
+        <h2>Mijn status<?= $mijn_team ? ' · ' . e($mijn_team['naam']) : '' ?></h2>
+        <span class="status-toggle-chevron">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </span>
+    </label>
+    <div class="status-compact">
+        <?php foreach ($mijn_statussen as $s): ?>
+            <form method="post" action="/status.php">
+                <input type="hidden" name="eenheidsstatus_id" value="<?= $s['id'] ?>">
+                <button type="submit" class="status-btn-compact <?= $mijn_status && $mijn_status['id'] === $s['id'] ? 'actief' : '' ?>" title="<?= e($s['naam']) ?>">
+                    <?= e($s['afkorting']) ?>
+                </button>
+            </form>
+        <?php endforeach; ?>
+    </div>
     <div class="status-grid">
         <?php foreach ($mijn_statussen as $s): ?>
             <form method="post" action="/status.php">

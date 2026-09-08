@@ -1,5 +1,19 @@
 # Changelog — MDT
 
+## V0.0.11 (8-09-2026)
+
+- "Mijn status" op de meldingenlijst is nu in-/uitklapbaar. Standaard
+  ingeklapt: alleen compacte knopjes met de afkorting (bv. "TP"),
+  scheelt ruimte op het scherm. Uitgeklapt (tik op de kop of het
+  pijltje) zie je precies het vertrouwde grid met volledige namen erbij.
+  Beide standen zijn gewoon de echte statusknoppen — schakelt direct je
+  status, ongeacht welke stand je ziet. Zelfde in-/uitklaptechniek
+  (checkbox + CSS, geen JavaScript) als elders in MKAPP.
+- "Logboek" heet overal "Kladblok" (kopjes, knoppen, placeholder-tekst,
+  lege-staat-tekst) -- puur een naamswijziging op het scherm, de
+  onderliggende functienamen/databasekolommen blijven ongewijzigd.
+  Vereist MKAPP V2.0.2.15 voor dezelfde naamswijziging daar.
+
 ## V0.0.10 (7-09-2026)
 
 - Foto's uploaden/delen (fase M4) is op verzoek weer volledig

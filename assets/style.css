@@ -367,10 +367,73 @@ a { color: inherit; }
 .status-panel {
     margin-top: 16px;
 }
+
+/* In-/uitklappen (V0.0.11) -- zelfde schakelaartje-loze techniek
+   (checkbox + CSS :has()/sibling-selector, geen JS) als elders in de
+   app. Dichtgeklapt (standaard) toont .status-compact, opengeklapt
+   .status-grid -- de knoppen zelf blijven allebei gewoon echte
+   POST-formulieren, alleen het uiterlijk verschilt. */
+.status-toggle-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+.status-toggle-wrap h2 {
+    margin: 0;
+}
+.status-toggle-chevron {
+    display: flex;
+    flex-shrink: 0;
+    color: var(--muted);
+    transition: transform 0.15s;
+}
+.status-panel:has(.status-toggle-checkbox:checked) .status-toggle-chevron {
+    transform: rotate(180deg);
+}
+.status-toggle-checkbox {
+    display: none;
+}
+
+.status-compact {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    margin-top: 12px;
+}
+.status-toggle-checkbox:checked ~ .status-compact {
+    display: none;
+}
+.status-btn-compact {
+    flex-shrink: 0;
+    min-width: 46px;
+    padding: 8px 6px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.status-btn-compact:active { transform: scale(0.95); }
+.status-btn-compact.actief {
+    background: rgba(245,165,36,0.14);
+    border-color: var(--amber);
+    color: var(--amber);
+}
+
 .status-grid {
-    display: grid;
+    display: none;
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
+    margin-top: 12px;
+}
+.status-toggle-checkbox:checked ~ .status-grid {
+    display: grid;
 }
 .status-btn {
     display: flex;

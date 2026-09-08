@@ -67,19 +67,19 @@ include __DIR__ . '/includes/header.php';
 
 <?php if ($instellingen['mag_schrijven']): ?>
 <div class="panel">
-    <h2>Logboek toevoegen</h2>
+    <h2>Kladblok toevoegen</h2>
     <form method="post" class="logboek-form">
         <input type="hidden" name="actie" value="logboek_toevoegen">
-        <textarea name="notitie" rows="3" placeholder="Typ hier een logboekregel..." required></textarea>
+        <textarea name="notitie" rows="3" placeholder="Typ hier een kladblokregel..." required></textarea>
         <button type="submit" class="btn">Toevoegen</button>
     </form>
 </div>
 <?php endif; ?>
 
 <div class="panel">
-    <h2>Logboek</h2>
+    <h2>Kladblok</h2>
     <?php if (!$logboek): ?>
-        <p class="log-leeg">Nog geen logboekregels.</p>
+        <p class="log-leeg">Nog geen kladblokregels.</p>
     <?php endif; ?>
     <?php foreach ($logboek as $regel): ?>
         <div class="log-entry">
