@@ -34,9 +34,10 @@ waarin dat gebeurde.
 - Met 1 tik je eenheidsstatus doorgeven (fase M2) — komt automatisch
   als logboekregel op elke actieve toegewezen melding te staan. Kan per
   account uitgezet zijn (fase M6). Sinds fase M7 hoort elke status bij
-  een rol (bv. EHBO of Bouwploeg, zelf te beheren via Beheer >
-  Eenheidsstatussen in MKAPP) — je ziet alleen de statussen van je
-  eigen gekoppelde rol (Beheer > MDT-gebruikers in MKAPP); zonder
+  1 of meerdere rollen (bv. EHBO of Bouwploeg, zelf te beheren via
+  Beheer > Eenheidsstatussen in MKAPP — sinds MKAPP V2.0.2.28 kan dat
+  meerdere rollen tegelijk zijn) — je ziet de statussen van elke rol
+  die aan jou gekoppeld is (Beheer > MDT-gebruikers in MKAPP); zonder
   gekoppelde rol zie je geen statusknoppen.
 - Een crew-lijst met belknop (fase M3, nieuwe navigatietab "Crew") —
   de bestaande crew (contactpersonen zonder account) samen met je
@@ -70,7 +71,11 @@ verbindt met de **bestaande** MKAPP-database. Zorg dus dat:
    en zet `gekoppelde_gebruiker_id` in de payload van de
    `melding_toegewezen`-webhook (fase M5) — zonder die 2 dingen blijft
    het pushmeldingen-paneel in MDT gewoon verborgen, de rest van MDT
-   werkt onveranderd door).
+   werkt onveranderd door; V2.0.2.28 voegt de koppeltabel
+   `eenheidsstatus_rollen` toe (een status kan voortaan bij meerdere
+   rollen horen i.p.v. precies 1) — **vereist een nieuwe GRANT**
+   (zie hieronder), zonder die GRANT geeft MDT een fatale fout zodra
+   iemand een statusknop probeert te zien of te zetten).
 
 ### Een beperkt databaseaccount voor MDT
 
@@ -99,6 +104,7 @@ GRANT SELECT ON mkapp.push_abonnementen TO 'mdt_user'@'%';
 GRANT SELECT ON mkapp.melding_koppelingen TO 'mdt_user'@'%';
 GRANT SELECT ON mkapp.team_leden TO 'mdt_user'@'%';
 GRANT SELECT ON mkapp.melding_toewijzingen TO 'mdt_user'@'%';
+GRANT SELECT ON mkapp.eenheidsstatus_rollen TO 'mdt_user'@'%';
 
 -- Schrijven (fase M2: logboek terugschrijven + eenheidsstatus doorgeven;
 -- fase M5: pushabonnementen opslaan/verwijderen)

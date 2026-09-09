@@ -1,5 +1,22 @@
 # Changelog — MDT
 
+## V0.0.17 (9-09-2026)
+
+- MKAPP kan een eenheidsstatus sinds V2.0.2.28 aan meerdere rollen tegelijk
+  koppelen (i.p.v. precies 1) — bijvoorbeeld zowel EHBO als
+  EHBO-teamleider dezelfde status ("Ter plaatse") laten doorgeven. MDT
+  herkent dit nu correct: je ziet de statusknoppen van elke rol die aan
+  jou gekoppeld is, en het echt zetten van een status controleert
+  hetzelfde server-side (niet alleen het verbergen van knoppen).
+  Voorheen keek MDT alleen naar de oude, inmiddels niet meer bijgewerkte
+  kolom `eenheidsstatussen.rol_id` (precies 1 rol) — dat leverde na de
+  MKAPP-update een verkeerd (te beperkt) beeld op zodra een status aan
+  een 2e rol gekoppeld werd. Vereist MKAPP V2.0.2.28 (gedeelde
+  database, nieuwe tabel `eenheidsstatus_rollen`) **en een nieuwe GRANT
+  op productie**: `mdt_user` moet ook lezen mogen op
+  `mkapp.eenheidsstatus_rollen` (zie README.md) — zonder deze GRANT
+  geeft elke pagina met statusknoppen een fatale fout.
+
 ## V0.0.16 (8-09-2026)
 
 - MKAPP kan een melding sinds V2.0.2.24 aan meerdere crew-contacten/MDT-

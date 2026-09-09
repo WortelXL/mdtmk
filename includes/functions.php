@@ -455,10 +455,13 @@ function voeg_logboekregel_toe(PDO $pdo, int $melding_id, string $tekst, int $ge
 // ---- Eenheidsstatus (fase M2, per rol sinds fase M7) --------------------
 
 /**
- * De eenheidsstatussen die bij $rol_id horen, op volgorde. Sinds fase
- * M7 hoort elke status bij precies 1 rol (Beheer > Eenheidsstatussen
- * in MKAPP) — geen gekoppelde rol (null) levert dus altijd een lege
- * lijst op, bewust geen generieke terugvallijst.
+ * De eenheidsstatussen die bij $rol_id horen, op volgorde. Sinds MKAPP
+ * V2.0.2.28 kan een status bij 1 of meerdere rollen horen (koppeltabel
+ * eenheidsstatus_rollen in plaats van de oude, niet meer bijgewerkte
+ * kolom eenheidsstatussen.rol_id) — een status komt dus mee zodra de
+ * eigen gekoppelde rol één van die rollen is. Geen gekoppelde rol
+ * (null) levert nog steeds altijd een lege lijst op, bewust geen
+ * generieke terugvallijst.
  */
 function alle_eenheidsstatussen(PDO $pdo, ?int $rol_id): array
 {
@@ -467,7 +470,12 @@ function alle_eenheidsstatussen(PDO $pdo, ?int $rol_id): array
         return [];
     }
     if (!isset($cache[$rol_id])) {
-        $stmt = $pdo->prepare('SELECT * FROM eenheidsstatussen WHERE rol_id = :r ORDER BY volgorde ASC, id ASC');
+        $stmt = $pdo->prepare(
+            'SELECT e.* FROM eenheidsstatussen e
+             INNER JOIN eenheidsstatus_rollen er ON er.eenheidsstatus_id = e.id
+             WHERE er.rol_id = :r
+             ORDER BY e.volgorde ASC, e.id ASC'
+        );
         $stmt->execute(['r' => $rol_id]);
         $cache[$rol_id] = $stmt->fetchAll();
     }
@@ -501,8 +509,12 @@ function huidige_eenheidsstatus(PDO $pdo, int $gebruiker_id): ?array
  *
  * Sinds fase M7 moet de status ook echt bij de eigen gekoppelde rol
  * horen — dit is een server-side controle, niet alleen het verbergen
- * van knoppen in de UI: zonder gekoppelde rol, of bij een status van
- * een andere rol, weigert deze functie.
+ * van knoppen in de UI: zonder gekoppelde rol, of bij een status
+ * waar de eigen rol niet aan gekoppeld is, weigert deze functie. Sinds
+ * MKAPP V2.0.2.28 kan een status bij meerdere rollen horen (koppeltabel
+ * eenheidsstatus_rollen) — de controle is dus lidmaatschap van die
+ * tabel, niet meer gelijkheid met de oude, niet meer bijgewerkte kolom
+ * eenheidsstatussen.rol_id.
  */
 function zet_eenheidsstatus(PDO $pdo, int $gebruiker_id, int $eenheidsstatus_id, string $gebruiker_naam): ?array
 {
@@ -514,10 +526,14 @@ function zet_eenheidsstatus(PDO $pdo, int $gebruiker_id, int $eenheidsstatus_id,
         return null;
     }
 
-    $status_stmt = $pdo->prepare('SELECT * FROM eenheidsstatussen WHERE id = :id');
-    $status_stmt->execute(['id' => $eenheidsstatus_id]);
+    $status_stmt = $pdo->prepare(
+        'SELECT e.* FROM eenheidsstatussen e
+         INNER JOIN eenheidsstatus_rollen er ON er.eenheidsstatus_id = e.id AND er.rol_id = :r
+         WHERE e.id = :id'
+    );
+    $status_stmt->execute(['id' => $eenheidsstatus_id, 'r' => (int) $instellingen['rol_id']]);
     $status = $status_stmt->fetch();
-    if (!$status || (int) $status['rol_id'] !== (int) $instellingen['rol_id']) {
+    if (!$status) {
         return null;
     }
 
