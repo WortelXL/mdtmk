@@ -50,7 +50,7 @@ include __DIR__ . '/includes/header.php';
     <div class="meld-id"><?= e($melding['meld_id']) ?></div>
     <h1><?= e($melding['titel']) ?></h1>
     <div class="tags">
-        <span class="tag" style="background:var(--amber)22; color:var(--amber);"><?= prioriteit_label($melding['prioriteit']) ?></span>
+        <span class="tag" style="background:var(--amber)22; color:var(--amber-text);"><?= prioriteit_label($melding['prioriteit']) ?></span>
         <?= status_tag_html($pdo, $melding['status']) ?>
         <?php if ($melding['hoofd_naam']): ?>
             <span class="tag" style="background:<?= e($melding['hoofd_kleur']) ?>22; color:<?= e($melding['hoofd_kleur']) ?>;">
@@ -94,7 +94,7 @@ include __DIR__ . '/includes/header.php';
         <div class="log-entry">
             <div class="kop">
                 <?php if (!$regel['is_eigen']): ?>
-                    <a href="/melding.php?id=<?= (int) $regel['melding_id'] ?>" style="color:var(--amber); text-decoration:none; font-weight:600;" title="Regel van gekoppelde melding <?= e($regel['bron_meld_id']) ?> — <?= e($regel['bron_titel']) ?>">🔗 <?= e($regel['bron_meld_id']) ?></a> ·
+                    <a href="/melding.php?id=<?= (int) $regel['melding_id'] ?>" style="color:var(--amber-text); text-decoration:none; font-weight:600;" title="Regel van gekoppelde melding <?= e($regel['bron_meld_id']) ?> — <?= e($regel['bron_titel']) ?>">🔗 <?= e($regel['bron_meld_id']) ?></a> ·
                 <?php endif; ?>
                 <?= (new DateTime($regel['aangemaakt_op']))->format('d-m-Y H:i') ?> · <?= e($regel['auteur'] ?: 'onbekend') ?>
             </div>

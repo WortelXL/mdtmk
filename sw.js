@@ -26,6 +26,7 @@ self.addEventListener('push', function (event) {
     event.waitUntil(
         self.registration.showNotification(data.titel, {
             body: data.tekst,
+            icon: '/assets/icon-192.png',
             data: { url: data.url },
             tag: 'mdt-melding',
             renotify: true,

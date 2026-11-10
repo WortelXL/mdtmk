@@ -31,13 +31,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Inloggen — MDT</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#030917">
     <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
     <div class="login-wrap">
         <div class="login-card">
-            <div class="login-logo">MDT</div>
-            <h1>MDT</h1>
+            <img class="login-hero" src="/assets/logo-512.png" alt="MDT" width="150" height="150">
+            <h1 class="sr-only">MDT</h1>
             <p class="sub">Mobiel Data Terminal — voor crew op terrein</p>
 
             <?php if ($fout): ?>

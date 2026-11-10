@@ -208,7 +208,7 @@ include __DIR__ . '/includes/header.php';
             <div class="titel"><?= e($m['titel']) ?></div>
             <div class="meta"><?= e($m['locatie'] ?: 'Geen locatie opgegeven') ?></div>
             <div class="tags">
-                <span class="tag" style="background:var(--amber)22; color:var(--amber);"><?= prioriteit_label($m['prioriteit']) ?></span>
+                <span class="tag" style="background:var(--amber)22; color:var(--amber-text);"><?= prioriteit_label($m['prioriteit']) ?></span>
                 <?= status_tag_html($pdo, $m['status']) ?>
                 <?php if ($m['hoofd_naam']): ?>
                     <span class="tag" style="background:<?= e($m['hoofd_kleur']) ?>22; color:<?= e($m['hoofd_kleur']) ?>;">

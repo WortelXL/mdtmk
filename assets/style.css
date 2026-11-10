@@ -1,18 +1,24 @@
 :root {
-    --bg:        #0a0d13;
-    --panel:     #121722;
-    --panel-2:   #171d2b;
-    --border:    #232b3d;
-    --text:      #e7eaf1;
-    --muted:     #8b93a7;
-    --amber:     #f5a524;
-    --amber-dim: #7a5a1f;
-    --red:       #ef4444;
-    --green:     #22c55e;
-    --blue:      #3b82f6;
-    --gray:      #6b7280;
+    /* Kleuren afgeleid van het MDT-logo (V0.0.18). De variabelenaam
+       --amber is behouden zodat bestaande verwijzingen blijven werken,
+       maar de waarde is nu het merkmagenta van het logo. */
+    --bg:        #030917;
+    --panel:     #0a1330;
+    --panel-2:   #101c44;
+    --border:    #1c2b5e;
+    --text:      #f2f5ff;
+    --muted:     #9faad3;
+    --amber:      #e6007e;   /* merkmagenta: vlakken, randen, knoppen */
+    --amber-text: #ff5cb1;   /* zelfde kleur, lichter voor tekst op donker (contrast) */
+    --amber-dim:  #7a0a4b;
+    --yellow:    #f4e81e;
+    --red:       #ff4d5a;
+    --green:     #39b54a;
+    --blue:      #0394d2;
+    --gray:      #6e7ba8;
+    --topbar-h:  56px;
 
-    --font-display: 'Space Grotesk', 'Inter', sans-serif;
+--font-display: 'Space Grotesk', 'Inter', sans-serif;
     --font-body: 'Inter', system-ui, sans-serif;
     --font-mono: 'IBM Plex Mono', 'SFMono-Regular', monospace;
 }
@@ -50,26 +56,31 @@ a { color: inherit; }
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 14px 16px;
-    background: rgba(10,13,19,0.92);
+    height: var(--topbar-h);
+    padding: 0 16px;
+    background: rgba(3,9,23,0.94);
     backdrop-filter: blur(6px);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 2px solid var(--amber);
 }
 
 .topbar .brand {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 18px;
-    color: var(--amber);
+    letter-spacing: 0.04em;
+    color: #fff;
     text-decoration: none;
 }
-.topbar .brand .dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--amber);
+.topbar .brand img {
+    width: 36px; height: 36px;
+    border-radius: 9px;
+    display: block;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.18);
 }
+.topbar .brand i { font-style: normal; color: var(--amber-text); }
 
 .topbar .who {
     font-size: 12.5px;
@@ -85,6 +96,7 @@ a { color: inherit; }
 
 /* ---- Login ---------------------------------------------------------- */
 .login-wrap {
+    background: radial-gradient(120% 70% at 50% 0%, #14235e 0%, var(--bg) 62%);
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -101,19 +113,22 @@ a { color: inherit; }
     padding: 32px 24px;
 }
 
-.login-logo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 56px; height: 56px;
-    border-radius: 50%;
-    background: var(--panel-2);
-    border: 1.5px solid var(--amber);
-    margin: 0 auto 16px;
-    font-family: var(--font-display);
-    font-weight: 700;
-    color: var(--amber);
-    font-size: 20px;
+.login-hero {
+    display: block;
+    width: 150px; height: 150px;
+    border-radius: 32px;
+    margin: 0 auto 18px;
+    box-shadow: 0 8px 28px rgba(230,0,126,0.45), 0 0 0 1px rgba(255,255,255,0.14);
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
 }
 
 .login-card h1 {
@@ -166,7 +181,7 @@ a { color: inherit; }
     cursor: pointer;
     text-decoration: none;
     background: var(--amber);
-    color: #1a1305;
+    color: #fff;
 }
 .btn:active { transform: scale(0.98); }
 
@@ -216,7 +231,7 @@ a { color: inherit; }
 }
 .melding-card.prio-laag    { border-left-color: var(--gray); }
 .melding-card.prio-normaal { border-left-color: var(--blue); }
-.melding-card.prio-hoog    { border-left-color: var(--amber); }
+.melding-card.prio-hoog    { border-left-color: var(--yellow); }
 .melding-card.prio-kritiek { border-left-color: var(--red); }
 
 .melding-card .top-row {
@@ -348,13 +363,13 @@ a { color: inherit; }
     margin-top: 14px;
     padding: 12px 14px;
     border-radius: 10px;
-    background: rgba(245,165,36,0.08);
+    background: rgba(230,0,126,0.08);
     border: 1px solid var(--amber-dim);
     color: var(--muted);
     font-size: 12.5px;
     line-height: 1.5;
 }
-.hint-toekomst strong { color: var(--amber); }
+.hint-toekomst strong { color: var(--amber-text); }
 
 .footer-note {
     text-align: center;
@@ -421,9 +436,9 @@ a { color: inherit; }
 }
 .status-btn-compact:active { transform: scale(0.95); }
 .status-btn-compact.actief {
-    background: rgba(245,165,36,0.14);
+    background: rgba(230,0,126,0.14);
     border-color: var(--amber);
-    color: var(--amber);
+    color: var(--amber-text);
 }
 
 .status-grid {
@@ -462,11 +477,11 @@ a { color: inherit; }
     line-height: 1.2;
 }
 .status-btn.actief {
-    background: rgba(245,165,36,0.14);
+    background: rgba(230,0,126,0.14);
     border-color: var(--amber);
 }
-.status-btn.actief .afk { color: var(--amber); }
-.status-btn.actief .naam { color: var(--amber); }
+.status-btn.actief .afk { color: var(--amber-text); }
+.status-btn.actief .naam { color: var(--amber-text); }
 
 /* ---- Weergave-schakelaar: toegewezen/alle meldingen (fase M6) ----- */
 .weergave-schakelaar {
@@ -485,9 +500,9 @@ a { color: inherit; }
     font-weight: 600;
 }
 .weergave-schakelaar a.actief {
-    background: rgba(245,165,36,0.14);
+    background: rgba(230,0,126,0.14);
     border-color: var(--amber);
-    color: var(--amber);
+    color: var(--amber-text);
 }
 
 /* ---- Logboek toevoegen (fase M2) ----------------------------------- */
@@ -512,9 +527,9 @@ a { color: inherit; }
 .tabbar {
     display: flex;
     position: sticky;
-    top: 53px;
+    top: var(--topbar-h);
     z-index: 9;
-    background: rgba(10,13,19,0.92);
+    background: rgba(3,9,23,0.94);
     backdrop-filter: blur(6px);
     border-bottom: 1px solid var(--border);
 }
@@ -533,8 +548,8 @@ a { color: inherit; }
     border-bottom: 2px solid transparent;
 }
 .tabbar a.actief {
-    color: var(--amber);
-    border-bottom-color: var(--amber);
+    color: #fff;
+    border-bottom-color: var(--yellow);
 }
 
 /* ---- Crew-lijst met bellen (fase M3) -------------------------------- */
@@ -572,7 +587,7 @@ a { color: inherit; }
     height: 44px;
     border-radius: 50%;
     background: var(--amber);
-    color: #1a1305;
+    color: #fff;
     font-size: 19px;
     text-decoration: none;
 }
@@ -640,7 +655,7 @@ a { color: inherit; }
     transition: transform 0.15s ease, background 0.15s ease;
 }
 .toggle-switch input:checked + .slider {
-    background: rgba(245,165,36,0.15);
+    background: rgba(230,0,126,0.15);
     border-color: var(--amber);
 }
 .toggle-switch input:checked + .slider::before {

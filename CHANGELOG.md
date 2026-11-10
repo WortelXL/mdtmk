@@ -1,5 +1,22 @@
 # Changelog — MDT
 
+## V0.0.18 (10-11-2026)
+
+- Nieuw MDT-logo toegepast, met de hele app in de kleuren van het logo
+  (donkerblauw, magenta, geel, lichtblauw) in plaats van het eerdere
+  donkere/amberkleurige thema. Het logo staat in de kop (i.p.v. het
+  oranje bolletje) en groot op de inlogpagina.
+- Logo ook als favicon, als icoon op het beginscherm van de telefoon
+  (apple-touch-icon + `manifest.webmanifest`) en als icoon in
+  pushmeldingen (`sw.js`).
+- Prioriteit "hoog" heeft nu een gele rand; "kritiek" blijft rood zodat
+  het niet te verwarren is met het merkmagenta. De actieve tab heeft een
+  gele streep. Tekst in magenta gebruikt een lichtere tint
+  (`--amber-text`) voor voldoende contrast op de donkere achtergrond.
+- Hoogte van de kop staat nu vast (`--topbar-h`), zodat de plakkende
+  tabbalk er altijd netjes onder blijft.
+- Geen database- of GRANT-wijzigingen; geen MKAPP-aanpassing nodig.
+
 ## V0.0.17 (9-09-2026)
 
 - MKAPP kan een eenheidsstatus sinds V2.0.2.28 aan meerdere rollen tegelijk
