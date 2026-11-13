@@ -1,5 +1,41 @@
 # Changelog — MDT
 
+## V0.0.19 (13-11-2026)
+
+- Nieuwe tab met een tandwiel (naast Meldingen en Crew): **Instellingen**.
+  Het pushpaneel dat bovenaan "Mijn meldingen" stond is daarheen verhuisd.
+- Pushmeldingen aan/uit per apparaat, met twee keuzes die per apparaat in
+  de database worden bewaard: **Melding bij toewijzing** (standaard aan) en
+  **Kritieke meldingen voor iedereen** (standaard uit). Met de laatste krijg je
+  bij elke nieuwe melding met prioriteit kritiek een push met "🔴 KRITIEK" in de
+  titel, ook als de melding niet aan jou is toegewezen. Een kritieke melding die
+  aan jou wordt toegewezen krijgt dezelfde kop. Kritieke pushes worden met
+  `Urgency: high` verstuurd (direct afleveren) en blijven op Android/desktop staan
+  tot je ze wegtikt.
+- Knoppen **Test** en **Test kritiek** sturen direct een testmelding naar het
+  apparaat waarop je zit.
+- **Geluid in de app** (per apparaat, localStorage): aan/uit, toon (Alarm,
+  Piep, Bel) met afspeelknop, volume, en "Kritiek: herhalend alarm" dat blijft
+  klinken tot je de melding opent of op *Stop alarm* tikt (maximaal 10 minuten).
+  Bij een kritieke melding verschijnt onderin een rode balk. Het geluid werkt
+  alleen zolang MDT open staat; een gesloten app gebruikt het geluid van de
+  telefoon. Browsers laten geluid pas toe na een tik op de pagina.
+- "Mijn meldingen" ververst nu alleen de lijst en de statusknoppen (i.p.v. de
+  hele pagina) zodat een lopend alarm niet wordt onderbroken. Lukt dat niet,
+  dan wordt zoals voorheen volledig herladen.
+- `manifest.webmanifest`: `display` is nu `standalone`. iPhone/iPad sturen
+  alleen pushmeldingen naar een webapp die op het beginscherm staat; zo'n app
+  heeft geen adresbalk meer.
+- Apple staat voor webapps geen "Kritieke meldingen" toe die de stilteknop of
+  Niet storen doorbreken, en geen eigen pushgeluid; dat kan alleen met een
+  echte App Store-app. Dit staat ook op de Instellingen-pagina.
+- Vereist **MKAPP V2.0.2.47** (migratie `migratie_push_voorkeuren.sql`: kolommen
+  `toewijzing` en `kritiek_alle` op `push_abonnementen`; geen nieuwe GRANT nodig).
+  Zonder die migratie blijft MDT werken zoals voorheen en meldt de
+  Instellingen-pagina dat de keuzes nog niet kunnen worden opgeslagen.
+- Voor kritieke push voor iedereen moet in MKAPP bij Beheer > Connectiviteit
+  bij de MDT-webhook ook het event `melding_aangemaakt` worden aangevinkt.
+
 ## V0.0.18 (10-11-2026)
 
 - Nieuw MDT-logo toegepast, met de hele app in de kleuren van het logo

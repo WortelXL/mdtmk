@@ -2,7 +2,7 @@
   "name": "MDT - Mobiel Data Terminal",
   "short_name": "MDT",
   "start_url": "/index.php",
-  "display": "browser",
+  "display": "standalone",
   "background_color": "#030917",
   "theme_color": "#030917",
   "icons": [

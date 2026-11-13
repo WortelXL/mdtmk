@@ -619,6 +619,62 @@ function heeft_push_abonnement(PDO $pdo, int $gebruiker_id): bool
     return (bool) $stmt->fetchColumn();
 }
 
+/**
+ * V0.0.19: bestaan de voorkeurskolommen (`toewijzing`, `kritiek_alle`) al op
+ * push_abonnementen? Ze komen uit MKAPP-migratie V2.0.2.47. Zolang die nog niet
+ * is uitgevoerd werkt MDT zoals voorheen (alles naar iedereen met een abonnement)
+ * en toont de instellingenpagina een melding.
+ */
+function push_voorkeuren_beschikbaar(PDO $pdo): bool
+{
+    static $beschikbaar = null;
+    if ($beschikbaar === null) {
+        try {
+            $beschikbaar = (bool) $pdo->query("SHOW COLUMNS FROM push_abonnementen LIKE 'kritiek_alle'")->fetch();
+        } catch (Throwable $e) {
+            $beschikbaar = false;
+        }
+    }
+    return $beschikbaar;
+}
+
+/** Voorkeuren van 1 abonnement (dit apparaat) of null als dit apparaat niet is geabonneerd. */
+function push_voorkeuren_ophalen(PDO $pdo, int $gebruiker_id, string $endpoint): ?array
+{
+    $kolommen = push_voorkeuren_beschikbaar($pdo) ? 'toewijzing, kritiek_alle' : '1 AS toewijzing, 0 AS kritiek_alle';
+    $stmt = $pdo->prepare("SELECT $kolommen FROM push_abonnementen WHERE gebruiker_id = :g AND endpoint = :e LIMIT 1");
+    $stmt->execute(['g' => $gebruiker_id, 'e' => $endpoint]);
+    $rij = $stmt->fetch();
+    if (!$rij) {
+        return null;
+    }
+    return ['toewijzing' => (bool) $rij['toewijzing'], 'kritiek_alle' => (bool) $rij['kritiek_alle']];
+}
+
+/** Slaat de voorkeuren van 1 abonnement op. Doet niets als de MKAPP-migratie nog niet is uitgevoerd. */
+function push_voorkeuren_opslaan(PDO $pdo, int $gebruiker_id, string $endpoint, bool $toewijzing, bool $kritiek_alle): bool
+{
+    if (!push_voorkeuren_beschikbaar($pdo)) {
+        return false;
+    }
+    $stmt = $pdo->prepare('UPDATE push_abonnementen SET toewijzing = :t, kritiek_alle = :k WHERE gebruiker_id = :g AND endpoint = :e');
+    $stmt->execute(['t' => $toewijzing ? 1 : 0, 'k' => $kritiek_alle ? 1 : 0, 'g' => $gebruiker_id, 'e' => $endpoint]);
+    return true;
+}
+
+/** Alle abonnementen van actieve MDT-gebruikers die "kritieke meldingen voor iedereen" aan hebben staan. */
+function push_abonnementen_kritiek_alle(PDO $pdo): array
+{
+    if (!push_voorkeuren_beschikbaar($pdo)) {
+        return [];
+    }
+    return $pdo->query(
+        'SELECT p.* FROM push_abonnementen p
+         JOIN mdt_gebruikers m ON m.gebruiker_id = p.gebruiker_id
+         WHERE p.kritiek_alle = 1 AND m.actief = 1'
+    )->fetchAll();
+}
+
 /** Alle pushabonnementen van 1 gebruiker (gebruikt door webhook_ontvangen.php om te versturen). */
 function push_abonnementen_voor_gebruiker(PDO $pdo, int $gebruiker_id): array
 {

@@ -161,11 +161,16 @@ VAPID-sleutelpaar ingesteld, dan blijft het pushmeldingen-paneel op
    willekeurig `WEBHOOK_TOKEN`. Herstart MDT daarna.
 2. Stel in MKAPP bij **Beheer > Connectiviteit** een webhook in:
    - URL: `https://<mdt-domein>/webhook_ontvangen.php?token=<jouw WEBHOOK_TOKEN>`
-   - Events: `melding_toegewezen`
+   - Events: `melding_toegewezen` en (sinds V0.0.19, voor "Kritieke meldingen voor
+     iedereen") `melding_aangemaakt`
    - Platform: generiek
-3. Elke gebruiker zet pushmeldingen zelf aan/uit via de schakelaar op
-   "Mijn meldingen" (verschijnt alleen als de browser het ondersteunt
-   én er een VAPID-sleutelpaar is ingesteld). Vereist HTTPS — een
+3. Elke gebruiker zet pushmeldingen zelf aan/uit via het tandwiel-tabje
+   **Instellingen** (sinds V0.0.19; daar staan ook "Kritieke meldingen voor
+   iedereen", een testknop en de geluidsopties). De schakelaar werkt alleen
+   als de browser push ondersteunt én er een VAPID-sleutelpaar is ingesteld.
+   Op iPhone/iPad moet MDT eerst via Deel > Zet op beginscherm als app zijn
+   toegevoegd (het manifest staat daarvoor op `standalone`). De voorkeuren
+   per apparaat vereisen MKAPP V2.0.2.47 (migratie `migratie_push_voorkeuren.sql`). Vereist HTTPS — een
    browser laat `pushManager.subscribe()` niet toe op gewoon `http://`
    (behalve `localhost` tijdens testen); zonder HTTPS blijft het paneel
    verborgen, de rest van MDT blijft gewoon werken op een lokaal

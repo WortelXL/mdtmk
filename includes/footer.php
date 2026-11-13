@@ -50,9 +50,40 @@
             return true;
         }
 
+        // V0.0.19: pagina's met data-soft-refresh="<selectoren>" verversen alleen
+        // die onderdelen (de inhoud wordt vervangen) i.p.v. de hele pagina. Zo
+        // wordt het geluidsalarm niet onderbroken en blijft de browser-toestemming
+        // om geluid af te spelen behouden. Gaat er iets mis: gewoon volledig herladen.
+        var zacht = (document.body.dataset.softRefresh || '').split(',').filter(Boolean);
+
+        function zachtVerversen() {
+            fetch(location.href, { credentials: 'same-origin', cache: 'no-store' }).then(function (resp) {
+                if (!resp.ok || /\/login\.php/.test(resp.url)) { throw new Error('opnieuw laden'); }
+                return resp.text();
+            }).then(function (html) {
+                var doc = new DOMParser().parseFromString(html, 'text/html');
+                zacht.forEach(function (selector) {
+                    var nieuw = doc.querySelectorAll(selector);
+                    var huidig = document.querySelectorAll(selector);
+                    if (nieuw.length !== huidig.length) { throw new Error('opnieuw laden'); }
+                    for (var i = 0; i < huidig.length; i++) {
+                        if (huidig[i].innerHTML !== nieuw[i].innerHTML) {
+                            huidig[i].innerHTML = nieuw[i].innerHTML;
+                        }
+                    }
+                });
+            }).catch(function () {
+                location.reload();
+            });
+        }
+
         setInterval(function () {
             if (magVerversen()) {
-                location.reload();
+                if (zacht.length) {
+                    zachtVerversen();
+                } else {
+                    location.reload();
+                }
             }
         }, seconden * 1000);
     })();

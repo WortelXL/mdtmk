@@ -255,7 +255,8 @@ function webpush_versturen(
     array $payload,
     string $vapid_private_pem,
     string $vapid_public_b64url,
-    string $vapid_subject_mailto
+    string $vapid_subject_mailto,
+    string $urgency = ''
 ): array {
     try {
         $body = webpush_payload_versleutelen(json_encode($payload), $ua_public_b64url, $auth_secret_b64url);
@@ -270,6 +271,11 @@ function webpush_versturen(
             'TTL: ' . (4 * 7 * 24 * 3600), // 4 weken
             'Authorization: vapid t=' . $jwt . ', k=' . $vapid_public_b64url,
         ];
+        // V0.0.19: 'high' laat de pushdienst (bij Apple: priority 10) de
+        // melding direct afleveren i.p.v. te bundelen -- voor kritieke meldingen.
+        if (in_array($urgency, ['very-low', 'low', 'normal', 'high'], true)) {
+            $headers[] = 'Urgency: ' . $urgency;
+        }
 
         $context = stream_context_create([
             'http' => [
