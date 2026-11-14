@@ -4,6 +4,8 @@
  * index.php), kritieke push voor iedereen, testmelding en geluid in de app.
  * Pushvoorkeuren staan in de database (push_abonnementen, per apparaat); de
  * geluidsinstellingen in localStorage van dit apparaat (zie assets/mdt-geluid.js).
+ * V0.0.22: ook "Verversen" (automatisch verversen aan/uit + hoe vaak, zie
+ * assets/mdt-verversen.js).
  */
 require_once __DIR__ . '/includes/functions.php';
 vereis_login();
@@ -61,6 +63,28 @@ include __DIR__ . '/includes/header.php';
     <?php endif; ?>
 </div>
 
+<div class="panel set-sec" id="verversen-panel">
+    <h2>Verversen</h2>
+    <p class="sub">Houdt Meldingen en een geopende melding vanzelf bij. Met de knop <span class="ico-inline" aria-hidden="true">&#8635;</span> links van het tandwiel ververs je op elk moment zelf.</p>
+
+    <div class="set-row">
+        <div class="lbl">Automatisch verversen<small>Wordt overgeslagen zolang je typt of het scherm niet open staat.</small></div>
+        <label class="toggle-switch"><input type="checkbox" id="verversen-aan"><span class="slider"></span></label>
+    </div>
+    <div class="set-row">
+        <div class="lbl">Hoe vaak</div>
+        <div class="set-ctl">
+            <select id="verversen-interval" aria-label="Hoe vaak automatisch verversen">
+                <option value="15">Elke 15 seconden</option>
+                <option value="30">Elke 30 seconden</option>
+                <option value="60">Elke minuut</option>
+                <option value="120">Elke 2 minuten</option>
+                <option value="300">Elke 5 minuten</option>
+            </select>
+        </div>
+    </div>
+</div>
+
 <div class="panel set-sec" id="geluid-panel">
     <h2>Geluid in de app</h2>
     <p class="sub">Werkt zolang MDT open staat op je scherm. Een pushmelding op een gesloten app gebruikt altijd het geluid van je telefoon.</p>
@@ -102,6 +126,23 @@ include __DIR__ . '/includes/header.php';
 
 <script>
 (function () {
+    // ---- Verversen ----------------------------------------------------------
+    var verversen = window.mdtVerversen;
+    var verAanEl = document.getElementById('verversen-aan');
+    var verIntEl = document.getElementById('verversen-interval');
+    if (verversen) {
+        var vinst = verversen.instellingen();
+        verAanEl.checked = vinst.aan;
+        verIntEl.value = String(vinst.seconden);
+        verIntEl.disabled = !vinst.aan;
+        var bewaarVerversen = function () {
+            verIntEl.disabled = !verAanEl.checked;
+            verversen.opslaan({ aan: verAanEl.checked, seconden: parseInt(verIntEl.value, 10) });
+        };
+        verAanEl.addEventListener('change', bewaarVerversen);
+        verIntEl.addEventListener('change', bewaarVerversen);
+    }
+
     // ---- Geluid -------------------------------------------------------------
     var geluid = window.mdtGeluid;
     var aanEl = document.getElementById('geluid-aan');

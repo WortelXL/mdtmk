@@ -18,20 +18,15 @@
         }
     }, true);
 
-    // Auto-refresh: ververst de pagina periodiek zodat een wijziging van
-    // een ander (nieuwe toewijzing, logboekregel, statuswijziging)
-    // vanzelf zichtbaar wordt zonder handmatig te hoeven verversen. Alleen
-    // actief op pagina's die dit aanzetten via data-auto-refresh="<sec>"
-    // op <body> (zie includes/header.php). Ververst nooit terwijl je iets
-    // aan het invullen bent (tekstveld met inhoud, focus in een veld, of
-    // een formulier dat nog aan het versturen is) of terwijl het tabblad
-    // niet zichtbaar is -- dat zou half ingevulde invoer kunnen kwijtraken.
+    // Verversen (V0.0.22): zet pagina's met data-auto-refresh="<sec>" periodiek
+    // opnieuw op en bedient de verversknop naast het tandwiel. Of er automatisch
+    // ververst wordt en hoe vaak staat per apparaat in Instellingen (zie
+    // assets/mdt-verversen.js); de pagina bepaalt alleen of ze meedoet. Het
+    // automatisch verversen slaat een ronde over terwijl je iets aan het
+    // invullen bent (tekstveld met inhoud, focus in een veld, of een formulier
+    // dat nog aan het versturen is) of het tabblad niet zichtbaar is -- dat zou
+    // half ingevulde invoer kunnen kwijtraken. De knop ververst altijd direct.
     (function () {
-        var seconden = parseInt(document.body.dataset.autoRefresh || '0', 10);
-        if (!seconden) {
-            return;
-        }
-
         function magVerversen() {
             if (document.hidden) {
                 return false;
@@ -56,8 +51,9 @@
         // om geluid af te spelen behouden. Gaat er iets mis: gewoon volledig herladen.
         var zacht = (document.body.dataset.softRefresh || '').split(',').filter(Boolean);
 
+        // Geeft een belofte terug die klaar is als de pagina bijgewerkt is.
         function zachtVerversen() {
-            fetch(location.href, { credentials: 'same-origin', cache: 'no-store' }).then(function (resp) {
+            return fetch(location.href, { credentials: 'same-origin', cache: 'no-store' }).then(function (resp) {
                 if (!resp.ok || /\/login\.php/.test(resp.url)) { throw new Error('opnieuw laden'); }
                 return resp.text();
             }).then(function (html) {
@@ -77,15 +73,51 @@
             });
         }
 
-        setInterval(function () {
-            if (magVerversen()) {
-                if (zacht.length) {
-                    zachtVerversen();
-                } else {
-                    location.reload();
-                }
+        var knop = document.getElementById('tab-refresh');
+        var bezig = false;
+
+        // Handmatig verversen: direct, ook als je iets aan het typen bent
+        // (op pagina's met zacht verversen blijft je tekstveld dan gewoon staan).
+        function nu() {
+            if (bezig) { return; }
+            bezig = true;
+            if (knop) { knop.classList.add('draait'); }
+            var klaar = function () {
+                bezig = false;
+                if (knop) { knop.classList.remove('draait'); }
+            };
+            if (zacht.length) {
+                // Minstens even laten draaien, anders ziet het eruit alsof er niets gebeurt.
+                Promise.all([zachtVerversen(), new Promise(function (r) { setTimeout(r, 700); })]).then(klaar, klaar);
+            } else {
+                setTimeout(function () { location.reload(); }, 150);
             }
-        }, seconden * 1000);
+        }
+
+        var api = window.mdtVerversen || {};
+        api.nu = nu;
+        window.mdtVerversen = api;
+        if (knop) { knop.addEventListener('click', nu); }
+
+        var seconden = parseInt(document.body.dataset.autoRefresh || '0', 10);
+        if (!seconden) {
+            return;
+        }
+        var inst = api.instellingen ? api.instellingen() : { aan: true, seconden: seconden };
+        if (!inst.aan) {
+            return;
+        }
+
+        setInterval(function () {
+            if (bezig || !magVerversen()) {
+                return;
+            }
+            if (zacht.length) {
+                zachtVerversen();
+            } else {
+                location.reload();
+            }
+        }, (inst.seconden || seconden) * 1000);
     })();
     </script>
 </body>

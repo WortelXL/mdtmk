@@ -1,5 +1,24 @@
 # Changelog — MDT
 
+## V0.0.22 (15-11-2026)
+
+- **Verversknop**: een icoontje (cirkelpijl) in de tabbalk, direct links van
+  het tandwiel. Een tik ververst meteen. Op Meldingen en een geopende melding
+  gebeurt dat "zacht" (alleen de lijst/status wordt bijgewerkt, een half
+  getypte notitie blijft staan en het geluidsalarm loopt door); op Crew en
+  Instellingen wordt de pagina opnieuw geladen. Het icoontje draait tijdens het
+  verversen.
+- **Automatisch verversen instelbaar**: onder het tandwiel, nieuw blok
+  "Verversen": aan/uit (standaard aan) en hoe vaak (15 s, 30 s = standaard,
+  1 min, 2 min, 5 min). De keuze geldt per apparaat (localStorage, nieuw bestand
+  `assets/mdt-verversen.js`). Het automatisch verversen blijft een ronde
+  overslaan zolang je typt of het scherm niet zichtbaar is.
+- Door MKAPP V2.0.2.49 wordt iemand bij een nieuwe toewijzing automatisch op
+  status **MV (Melding Verstrekt)** gezet; die status verschijnt vanzelf bij de
+  statusknoppen en wordt dankzij het automatisch verversen zonder handwerk
+  zichtbaar. Voor MDT zelf is daar geen codewijziging voor nodig.
+- Geen nieuwe databaserechten nodig.
+
 ## V0.0.21 (14-11-2026)
 
 - Een eenheidsstatus kan iemand **losmaken van zijn meldingen**. In MKAPP staat

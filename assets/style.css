@@ -554,6 +554,28 @@ a { color: inherit; }
 .tabbar a.tab-gear {
     flex: 0 0 64px;
 }
+/* Verversknop links van het tandwiel (V0.0.22) */
+.tabbar .tab-refresh {
+    flex: 0 0 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0;
+    background: none;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+.tabbar .tab-refresh:active { color: #fff; }
+.tabbar .tab-refresh:focus-visible { outline: 2px solid var(--yellow); outline-offset: -4px; }
+.tabbar .tab-refresh.draait svg { animation: tab-draai 0.8s linear infinite; }
+@keyframes tab-draai { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+    .tabbar .tab-refresh.draait svg { animation: none; opacity: 0.5; }
+}
 
 /* ---- Crew-lijst met bellen (fase M3) -------------------------------- */
 .crew-lijst {
@@ -822,3 +844,5 @@ a { color: inherit; }
 }
 .flash-ok { border-color: var(--green); color: #b8f0c1; }
 .flash-fout { border-color: var(--red); color: #ffc2c7; }
+
+.ico-inline { font-weight: 700; color: var(--text); }

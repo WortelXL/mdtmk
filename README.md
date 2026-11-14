@@ -219,10 +219,12 @@ mdtmk/
 │   ├── webpush.php           VAPID + payload-encryptie (RFC 8291/8292), geen externe library (fase M5)
 │   ├── header.php / footer.php
 ├── assets/style.css
+├── assets/mdt-geluid.js      geluid in de app + kritiek alarm (V0.0.19)
+├── assets/mdt-verversen.js   instelling automatisch verversen per apparaat (V0.0.22)
 ├── login.php
 ├── logout.php
 ├── index.php                 "Mijn meldingen" + korte statusregel
-├── instellingen.php          Instellingen: pushmeldingen, kritieke push, geluid (V0.0.19)
+├── instellingen.php          Instellingen: pushmeldingen, kritieke push, geluid (V0.0.19), verversen (V0.0.22)
 ├── melding.php?id=           melddetail + eenheidsstatus-knoppen + logboek (lezen + toevoegen)
 ├── status.php                 POST-only: eenheidsstatus zetten (terug naar de melding)
 ├── crew.php                   Crew + collega's, gecombineerde bellijst (fase M3)
