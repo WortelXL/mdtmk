@@ -1,5 +1,22 @@
 # Changelog — MDT
 
+## V0.0.20 (14-11-2026)
+
+- De statusknoppen (OW/TP/IR/BS/PS/OP) staan nu op de **melding zelf**
+  (`melding.php`, blok "Mijn status", dicht- en uitklapbaar zoals voorheen) in
+  plaats van op het beginscherm. Na een tik kom je terug op dezelfde melding.
+- Het beginscherm "Mijn meldingen" toont alleen nog een korte regel met je
+  huidige status ("Jouw status: Ter plaatse (TP)").
+- De status blijft **1 status per persoon** (zoals in MKAPP): een tik werkt
+  hem bij en zet, zoals voorheen, een logboekregel "Status: …" op al je actieve
+  meldingen. Er is dus geen database- of MKAPP-wijziging nodig.
+- Let op: zonder actieve melding is er nu nergens een knop om je status te
+  zetten (bijvoorbeeld "Beschikbaar" of "Op de post").
+- De detailpagina van een melding ververst nu zacht (alleen kop, statusknoppen
+  en kladblok) zodat een lopend kritiek alarm niet wordt onderbroken.
+- Gedeelde markup staat in `includes/status_paneel.php`; `status.php` stuurt
+  terug naar de melding waar je op tikte (alleen een getal, geen vrije redirect).
+
 ## V0.0.19 (13-11-2026)
 
 - Nieuwe tab met een tandwiel (naast Meldingen en Crew): **Instellingen**.

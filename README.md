@@ -38,7 +38,8 @@ waarin dat gebeurde.
   Beheer > Eenheidsstatussen in MKAPP — sinds MKAPP V2.0.2.28 kan dat
   meerdere rollen tegelijk zijn) — je ziet de statussen van elke rol
   die aan jou gekoppeld is (Beheer > MDT-gebruikers in MKAPP); zonder
-  gekoppelde rol zie je geen statusknoppen.
+  gekoppelde rol zie je geen statusknoppen. Sinds V0.0.20 staan de
+  knoppen op de melding zelf (niet meer op het beginscherm).
 - Een crew-lijst met belknop (fase M3, nieuwe navigatietab "Crew") —
   de bestaande crew (contactpersonen zonder account) samen met je
   collega's die een MDT-account én telefoonnummer hebben, in 1
@@ -149,7 +150,7 @@ zonder een omweg via een 3e-partij-dienst: de versleuteling (RFC 8291)
 en het VAPID-JWT (RFC 8292) zijn met PHP's eigen `openssl`-extensie
 geïmplementeerd, zie `includes/webpush.php`. Optioneel: staat er geen
 VAPID-sleutelpaar ingesteld, dan blijft het pushmeldingen-paneel op
-"Mijn meldingen" gewoon verborgen en werkt de rest van MDT onveranderd.
+"Instellingen" gewoon verborgen en werkt de rest van MDT onveranderd.
 
 1. Genereer 1x een sleutelpaar:
    ```bash
@@ -213,9 +214,10 @@ mdtmk/
 ├── assets/style.css
 ├── login.php
 ├── logout.php
-├── index.php                 "Mijn meldingen" + eenheidsstatus-knoppen + pushmeldingen-schakelaar
-├── melding.php?id=           melddetail + logboek (lezen + toevoegen)
-├── status.php                 POST-only: eenheidsstatus zetten
+├── index.php                 "Mijn meldingen" + korte statusregel
+├── instellingen.php          Instellingen: pushmeldingen, kritieke push, geluid (V0.0.19)
+├── melding.php?id=           melddetail + eenheidsstatus-knoppen + logboek (lezen + toevoegen)
+├── status.php                 POST-only: eenheidsstatus zetten (terug naar de melding)
 ├── crew.php                   Crew + collega's, gecombineerde bellijst (fase M3)
 ├── push_abonneren.php         POST-only (JSON): pushabonnement aan-/afmelden (fase M5)
 ├── webhook_ontvangen.php      Publiek, token-beveiligd: ontvangt MKAPP's webhook, stuurt de pushmelding (fase M5)

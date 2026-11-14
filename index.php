@@ -15,54 +15,15 @@ $mijn_status = huidige_eenheidsstatus($pdo, huidige_gebruiker_id());
 // is de kommagescheiden weergavetekst, hierboven werkte dit nog met 1 team.
 $mijn_teams = mijn_teams($pdo, huidige_gebruiker_id());
 $mijn_teams_namen = implode(', ', array_column($mijn_teams, 'naam'));
-// Sinds fase M7: statussen horen bij een rol -- zonder gekoppelde rol
-// (mdt_instellingen['rol_id']) levert dit altijd een lege lijst op.
-$mijn_statussen = alle_eenheidsstatussen($pdo, $instellingen['rol_id'] ? (int) $instellingen['rol_id'] : null);
 
 $actief_nav = 'meldingen';
 $paginatitel = 'Mijn meldingen';
 $auto_refresh_seconden = 30;
-// V0.0.19: alleen de lijst en de statusknoppen verversen, niet de hele pagina
-// -- zo blijft een lopend alarm (en de geluidsontgrendeling) intact.
-$zacht_verversen = '.melding-lijst,.status-compact,.status-grid';
+// V0.0.19: alleen de lijst (en sinds V0.0.20 de statusregel) verversen, niet de
+// hele pagina -- zo blijft een lopend alarm (en de geluidsontgrendeling) intact.
+$zacht_verversen = '.melding-lijst,.mijn-status-regel';
 include __DIR__ . '/includes/header.php';
 ?>
-
-<?php if ($instellingen['toon_status_overzicht'] && $instellingen['rol_id']): ?>
-<div class="panel status-panel">
-    <input type="checkbox" id="status-toggle" class="status-toggle-checkbox">
-    <label for="status-toggle" class="status-toggle-wrap">
-        <h2>Mijn status<?= $mijn_teams_namen !== '' ? ' · ' . e($mijn_teams_namen) : '' ?></h2>
-        <span class="status-toggle-chevron">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-        </span>
-    </label>
-    <div class="status-compact">
-        <?php foreach ($mijn_statussen as $s): ?>
-            <form method="post" action="/status.php">
-                <input type="hidden" name="eenheidsstatus_id" value="<?= $s['id'] ?>">
-                <button type="submit" class="status-btn-compact <?= $mijn_status && $mijn_status['id'] === $s['id'] ? 'actief' : '' ?>" title="<?= e($s['naam']) ?>">
-                    <?= e($s['afkorting']) ?>
-                </button>
-            </form>
-        <?php endforeach; ?>
-    </div>
-    <div class="status-grid">
-        <?php foreach ($mijn_statussen as $s): ?>
-            <form method="post" action="/status.php">
-                <input type="hidden" name="eenheidsstatus_id" value="<?= $s['id'] ?>">
-                <button type="submit" class="status-btn <?= $mijn_status && $mijn_status['id'] === $s['id'] ? 'actief' : '' ?>">
-                    <span class="afk"><?= e($s['afkorting']) ?></span>
-                    <span class="naam"><?= e($s['naam']) ?></span>
-                </button>
-            </form>
-        <?php endforeach; ?>
-    </div>
-    <?php if (!$mijn_statussen): ?>
-        <p class="log-leeg">Nog geen eenheidsstatussen ingesteld voor jouw rol (Beheer &gt; Eenheidsstatussen in MKAPP).</p>
-    <?php endif; ?>
-</div>
-<?php endif; ?>
 
 <div class="page-head">
     <h1>Mijn meldingen</h1>
@@ -80,6 +41,19 @@ include __DIR__ . '/includes/header.php';
         </div>
     <?php endif; ?>
 </div>
+
+<?php if ($instellingen['toon_status_overzicht'] && $instellingen['rol_id']): ?>
+<p class="mijn-status-regel">
+    Jouw status:
+    <?php if ($mijn_status): ?>
+        <strong><?= e($mijn_status['naam']) ?></strong> (<?= e($mijn_status['afkorting']) ?>)
+    <?php else: ?>
+        <strong>nog niet gezet</strong>
+    <?php endif; ?>
+    <?= $mijn_teams_namen !== '' ? ' · ' . e($mijn_teams_namen) : '' ?>
+    <span class="mijn-status-hint">Zet je status op een melding.</span>
+</p>
+<?php endif; ?>
 
 <div class="melding-lijst">
     <?php if (!$meldingen): ?>

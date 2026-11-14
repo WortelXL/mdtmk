@@ -38,15 +38,26 @@ $logboek = melding_notities_samengevoegd($pdo, [$melding['id']])[$melding['id']]
 $logboek = array_reverse($logboek);
 $aantal_gekoppelde_regels = count(array_filter($logboek, fn($n) => !$n['is_eigen']));
 
+// V0.0.20: statusknoppen staan op de melding (niet meer op het beginscherm).
+// Sinds fase M7 horen statussen bij een rol -- zonder gekoppelde rol
+// ($instellingen['rol_id']) is de lijst leeg en blijft het blok verborgen.
+$mijn_status = huidige_eenheidsstatus($pdo, huidige_gebruiker_id());
+$mijn_teams_namen = implode(', ', array_column(mijn_teams($pdo, huidige_gebruiker_id()), 'naam'));
+$mijn_statussen = alle_eenheidsstatussen($pdo, $instellingen['rol_id'] ? (int) $instellingen['rol_id'] : null);
+$status_paneel_melding_id = (int) $melding['id'];
+
 $actief_nav = 'meldingen';
 $paginatitel = $melding['meld_id'];
 $auto_refresh_seconden = 30;
+// Alleen de dynamische delen verversen i.p.v. de hele pagina (zie footer.php),
+// zodat een lopend kritiek alarm niet wordt onderbroken.
+$zacht_verversen = '.js-zacht,.status-compact,.status-grid';
 include __DIR__ . '/includes/header.php';
 ?>
 
 <a href="/index.php" class="back-link">&larr; Mijn meldingen</a>
 
-<div class="detail-kop">
+<div class="detail-kop js-zacht">
     <div class="meld-id"><?= e($melding['meld_id']) ?></div>
     <h1><?= e($melding['titel']) ?></h1>
     <div class="tags">
@@ -63,6 +74,8 @@ include __DIR__ . '/includes/header.php';
         Aangemaakt <?= (new DateTime($melding['aangemaakt_op']))->format('d-m-Y H:i') ?>
     </div>
 </div>
+
+<?php include __DIR__ . '/includes/status_paneel.php'; ?>
 
 <?php if ($melding['omschrijving']): ?>
     <div class="panel">
@@ -82,7 +95,7 @@ include __DIR__ . '/includes/header.php';
 </div>
 <?php endif; ?>
 
-<div class="panel">
+<div class="panel js-zacht">
     <h2>Kladblok</h2>
     <?php if ($aantal_gekoppelde_regels > 0): ?>
         <p style="color:var(--muted); font-size:12px; margin:-6px 0 12px;">Inclusief <?= $aantal_gekoppelde_regels ?> regel<?= $aantal_gekoppelde_regels === 1 ? '' : 's' ?> uit gekoppelde meldingen (🔗).</p>

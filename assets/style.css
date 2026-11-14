@@ -792,3 +792,20 @@ a { color: inherit; }
     font-size: 13px;
     cursor: pointer;
 }
+
+/* ---- Statusregel op het beginscherm (V0.0.20) ------------------------- */
+.mijn-status-regel {
+    margin: 12px 0 0;
+    padding: 10px 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.5;
+}
+.mijn-status-regel strong { color: var(--text); }
+.mijn-status-regel .mijn-status-hint {
+    display: block;
+    font-size: 12px;
+}
