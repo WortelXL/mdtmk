@@ -113,6 +113,13 @@ GRANT INSERT ON mkapp.melding_notities TO 'mdt_user'@'%';
 GRANT UPDATE (huidige_eenheidsstatus_id) ON mkapp.gebruikers TO 'mdt_user'@'%';
 GRANT INSERT, UPDATE, DELETE ON mkapp.push_abonnementen TO 'mdt_user'@'%';
 
+-- V0.0.21: een status met "Koppelt los van meldingen" (MKAPP V2.0.2.48) haalt
+-- iemand van zijn eigen actieve meldingen af. Dat is de persoonlijke toewijzing
+-- verwijderen + de oude kolom bijwerken (die MKAPP's plotbord nog leest). Zonder
+-- deze 2 regels werkt de status gewoon, alleen het losmaken mislukt (met melding).
+GRANT DELETE ON mkapp.melding_toewijzingen TO 'mdt_user'@'%';
+GRANT UPDATE (toegewezen_aan_gebruiker_id) ON mkapp.meldingen TO 'mdt_user'@'%';
+
 FLUSH PRIVILEGES;
 ```
 

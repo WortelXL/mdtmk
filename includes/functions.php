@@ -541,12 +541,79 @@ function zet_eenheidsstatus(PDO $pdo, int $gebruiker_id, int $eenheidsstatus_id,
     $stmt->execute(['s' => $eenheidsstatus_id, 'gid' => $gebruiker_id]);
 
     $actieve_meldingen = mijn_meldingen($pdo, $gebruiker_id, false);
-    $regel = 'Status: ' . $status['naam'] . ' (' . $status['afkorting'] . ')';
-    foreach ($actieve_meldingen as $melding) {
-        voeg_logboekregel_toe($pdo, (int) $melding['id'], $regel, $gebruiker_id, $gebruiker_naam);
+
+    // V0.0.21: een status met "Koppelt los van meldingen" (MKAPP V2.0.2.48, Beheer >
+    // Eenheidsstatussen, bv. Op de post) maakt de persoon los van zijn actieve meldingen.
+    $losgekoppeld = [];       // meldingen waar de persoonlijke toewijzing is verwijderd (id => meld_id)
+    $ontkoppel_fout = false;
+    if (!empty($status['ontkoppelt_melding'])) {
+        [$losgekoppeld, $ontkoppel_fout] = melding_persoonlijk_ontkoppelen($pdo, $gebruiker_id, $actieve_meldingen);
     }
 
+    $regel = 'Status: ' . $status['naam'] . ' (' . $status['afkorting'] . ')';
+    foreach ($actieve_meldingen as $melding) {
+        $tekst = isset($losgekoppeld[(int) $melding['id']]) ? $regel . ' — losgekoppeld van deze melding' : $regel;
+        voeg_logboekregel_toe($pdo, (int) $melding['id'], $tekst, $gebruiker_id, $gebruiker_naam);
+    }
+
+    $status['losgekoppeld'] = array_values($losgekoppeld);
+    $status['ontkoppel_fout'] = $ontkoppel_fout;
     return $status;
+}
+
+/**
+ * Haalt de PERSOONLIJKE toewijzing (type 'mdt') van deze gebruiker weg van de
+ * opgegeven (actieve) meldingen (V0.0.21). Een toewijzing via een team blijft
+ * staan -- de collega's houden die melding. Werkt ook de oude kolom
+ * meldingen.toegewezen_aan_gebruiker_id bij (laatst toegevoegde resterende
+ * MDT-toewijzing, of NULL), net als MKAPP zelf doet, want het plotbord en het
+ * meldingscherm van MKAPP lezen die nog. Per melding in 1 transactie: lukt het
+ * niet (bv. ontbrekende databaserechten, zie README), dan blijft die melding
+ * zoals hij was.
+ *
+ * @return array{0: array<int,string>, 1: bool} [melding-id => meld_id van losgekoppelde meldingen, is er iets misgegaan?]
+ */
+function melding_persoonlijk_ontkoppelen(PDO $pdo, int $gebruiker_id, array $meldingen): array
+{
+    $losgekoppeld = [];
+    $fout = false;
+    if (!$meldingen) {
+        return [$losgekoppeld, $fout];
+    }
+
+    $stmt = $pdo->prepare('SELECT melding_id FROM melding_toewijzingen WHERE type = "mdt" AND doel_id = :g');
+    $stmt->execute(['g' => $gebruiker_id]);
+    $persoonlijk = array_flip(array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN)));
+
+    foreach ($meldingen as $melding) {
+        $melding_id = (int) $melding['id'];
+        if (!isset($persoonlijk[$melding_id])) {
+            continue; // alleen via een team (of "alle meldingen") zichtbaar -- niets persoonlijks om los te maken
+        }
+        try {
+            // Bewust binnen de try: met echte (niet-geëmuleerde) prepares controleert de
+            // database de rechten al bij het prepare, dus ook een ontbrekende GRANT komt hier terecht.
+            $verwijder = $pdo->prepare('DELETE FROM melding_toewijzingen WHERE melding_id = :m AND type = "mdt" AND doel_id = :g');
+            $legacy = $pdo->prepare(
+                'UPDATE meldingen SET toegewezen_aan_gebruiker_id = (
+                     SELECT doel_id FROM melding_toewijzingen
+                     WHERE melding_id = :m1 AND type = "mdt" ORDER BY aangemaakt_op DESC LIMIT 1
+                 ) WHERE id = :m2'
+            );
+            $pdo->beginTransaction();
+            $verwijder->execute(['m' => $melding_id, 'g' => $gebruiker_id]);
+            $legacy->execute(['m1' => $melding_id, 'm2' => $melding_id]);
+            $pdo->commit();
+            $losgekoppeld[$melding_id] = (string) $melding['meld_id'];
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $fout = true;
+            error_log('MDT: losmaken van melding ' . $melding_id . ' mislukt: ' . $e->getMessage());
+        }
+    }
+    return [$losgekoppeld, $fout];
 }
 
 // ---- Crew-lijst met bellen (fase M3) -----------------------------------

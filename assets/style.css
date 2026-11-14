@@ -809,3 +809,16 @@ a { color: inherit; }
     display: block;
     font-size: 12px;
 }
+
+/* ---- Eenmalige melding na een actie (V0.0.21) ------------------------- */
+.flash {
+    margin: 14px 0 0;
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    line-height: 1.45;
+    border: 1px solid var(--border);
+    background: var(--panel);
+}
+.flash-ok { border-color: var(--green); color: #b8f0c1; }
+.flash-fout { border-color: var(--red); color: #ffc2c7; }

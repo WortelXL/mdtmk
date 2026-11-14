@@ -29,3 +29,7 @@
     </nav>
     <?php endif; ?>
     <div class="container">
+    <?php if (!empty($_SESSION['flash'])): ?>
+        <div class="flash <?= !empty($_SESSION['flash']['fout']) ? 'flash-fout' : 'flash-ok' ?>" role="status"><?= e($_SESSION['flash']['tekst']) ?></div>
+        <?php unset($_SESSION['flash']); ?>
+    <?php endif; ?>

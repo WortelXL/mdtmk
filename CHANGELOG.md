@@ -1,5 +1,29 @@
 # Changelog — MDT
 
+## V0.0.21 (14-11-2026)
+
+- Een eenheidsstatus kan iemand **losmaken van zijn meldingen**. In MKAPP staat
+  daarvoor bij Beheer > Eenheidsstatussen per status het vinkje "Koppelt los
+  van meldingen" (standaard aan voor "Op de post"). Kies je in MDT zo'n status,
+  dan verdwijnt je **persoonlijke** toewijzing van al je actieve meldingen. Een
+  toewijzing via een team blijft staan (je collega's houden die melding), en
+  afgehandelde meldingen blijven ongemoeid.
+- Op elke losgekoppelde melding komt de kladblokregel "Status: Op de post (OP) —
+  losgekoppeld van deze melding"; op de overige actieve meldingen komt de
+  gewone statusregel, zoals voorheen.
+- Zat je net op een melding waarvan je bent losgekoppeld, dan ga je terug naar
+  "Mijn meldingen" met een korte melding bovenaan ("Je bent losgekoppeld van
+  MK-0214.").
+- Ook de oude kolom `meldingen.toegewezen_aan_gebruiker_id` wordt bijgewerkt
+  (laatst overgebleven persoonlijke toewijzing, of leeg), omdat het plotbord en
+  het meldingscherm van MKAPP die nog lezen.
+- Vereist **MKAPP V2.0.2.48** (kolom `eenheidsstatussen.ontkoppelt_melding`) en
+  **2 extra databaserechten** voor `mdt_user` (zie README):
+  `GRANT DELETE ON mkapp.melding_toewijzingen` en
+  `GRANT UPDATE (toegewezen_aan_gebruiker_id) ON mkapp.meldingen`. Ontbreken die,
+  dan wordt de status nog steeds gezet, blijft de melding aan je hangen en krijg
+  je een foutmelding; er verandert dan niets aan de toewijzing.
+
 ## V0.0.20 (14-11-2026)
 
 - De statusknoppen (OW/TP/IR/BS/PS/OP) staan nu op de **melding zelf**
