@@ -120,6 +120,11 @@ GRANT INSERT, UPDATE, DELETE ON mkapp.push_abonnementen TO 'mdt_user'@'%';
 GRANT DELETE ON mkapp.melding_toewijzingen TO 'mdt_user'@'%';
 GRANT UPDATE (toegewezen_aan_gebruiker_id) ON mkapp.meldingen TO 'mdt_user'@'%';
 
+-- V0.0.23: de sessieduur (MKAPP Beheer > Instellingen) staat in de tabel
+-- instellingen (alleen evenementnaam/-datum en deze duur). Zonder deze regel
+-- werkt MDT gewoon, maar gebruikt dan altijd 8 uur.
+GRANT SELECT ON mkapp.instellingen TO 'mdt_user'@'%';
+
 FLUSH PRIVILEGES;
 ```
 
@@ -218,6 +223,7 @@ mdtmk/
 │   ├── functions.php        inloggen, meldingen/logboek lezen+schrijven, eenheidsstatus, pushabonnementen
 │   ├── webpush.php           VAPID + payload-encryptie (RFC 8291/8292), geen externe library (fase M5)
 │   ├── header.php / footer.php
+│   ├── sessie.php            sessieduur (uit MKAPP-instelling) + sessie starten (V0.0.23)
 ├── assets/style.css
 ├── assets/mdt-geluid.js      geluid in de app + kritiek alarm (V0.0.19)
 ├── assets/mdt-verversen.js   instelling automatisch verversen per apparaat (V0.0.22)

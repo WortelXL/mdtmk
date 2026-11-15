@@ -34,7 +34,7 @@ define('DB_CHARSET', env_of('DB_CHARSET', 'utf8mb4'));
 // ---- App -------------------------------------------------------------
 // Versienummer, apart bijgehouden van de MKAPP-fasering (M1 t/m M5) —
 // zie CHANGELOG.md voor wat er per versie is toegevoegd/gewijzigd.
-define('APP_VERSION', env_of('APP_VERSION', 'V0.0.22'));
+define('APP_VERSION', env_of('APP_VERSION', 'V0.0.23'));
 
 // ---- Web Push (fase M5, zonder externe library) -------------------------
 // Voor pushmeldingen bij een toewijzing (zie includes/webpush.php). Een
@@ -63,7 +63,7 @@ define('WEBHOOK_TOKEN', env_of('WEBHOOK_TOKEN', ''));
 // ---- Overig ------------------------------------------------------------
 date_default_timezone_set(env_of('APP_TIMEZONE', 'Europe/Amsterdam'));
 
-// Sessie moet gestart zijn voordat er output is (voor login beheer)
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// Sessie moet gestart zijn voordat er output is (voor login beheer).
+// V2.0.2.50: met de sessieduur die de beheerder heeft ingesteld (includes/sessie.php).
+require_once __DIR__ . '/includes/sessie.php';
+sessie_starten();

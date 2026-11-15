@@ -1,5 +1,20 @@
 # Changelog — MDT
 
+## V0.0.23 (15-11-2026)
+
+- **Sessieduur**: hoe lang je ingelogd blijft zonder iets te doen wordt nu
+  ingesteld door de beheerder in MKAPP (Beheer > Instellingen > Sessieduur:
+  1, 2, 4, 8 of 12 uur, standaard 8) en geldt voor MKAPP én MDT. Voorheen gold de
+  PHP-standaard van circa 24 minuten. Elke pagina die je opent telt als activiteit,
+  dus ook het automatisch verversen van een scherm dat openstaat houdt je
+  ingelogd. Na het sluiten van de browser of app blijf je ingelogd tot de tijd om is.
+- MDT leest de instelling uit de tabel `instellingen` (nieuw bestand
+  `includes/sessie.php`, de waarde wordt 30 seconden onthouden). Vereist
+  **1 extra databaserecht** voor `mdt_user`: `GRANT SELECT ON mkapp.instellingen`
+  (zie README). Ontbreekt dat recht, dan gebruikt MDT 8 uur en werkt verder alles gewoon.
+- Het sessiecookie is voortaan alleen voor de server leesbaar (HttpOnly, SameSite Lax).
+- Vereist voor het instellen zelf **MKAPP V2.0.2.50**.
+
 ## V0.0.22 (15-11-2026)
 
 - **Verversknop**: een icoontje (cirkelpijl) in de tabbalk, direct links van
